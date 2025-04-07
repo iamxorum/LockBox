@@ -1,0 +1,51 @@
+package com.lockbox.mapper;
+
+import com.lockbox.dto.CategoryCreationDto;
+import com.lockbox.dto.CategoryDto;
+import com.lockbox.model.Category;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CategoryMapper {
+    
+    public CategoryDto toDto(Category category) {
+        if (category == null) {
+            return null;
+        }
+        
+        CategoryDto dto = new CategoryDto();
+        dto.setId(category.getId());
+        dto.setName(category.getName());
+        dto.setDescription(category.getDescription());
+        dto.setCreatedAt(category.getCreatedAt());
+        dto.setUpdatedAt(category.getUpdatedAt());
+        
+        return dto;
+    }
+    
+    public Category toEntity(CategoryCreationDto dto) {
+        if (dto == null) {
+            return null;
+        }
+        
+        Category category = new Category();
+        category.setName(dto.getName());
+        category.setDescription(dto.getDescription());
+        
+        return category;
+    }
+    
+    public void updateEntityFromDto(CategoryCreationDto dto, Category category) {
+        if (dto == null || category == null) {
+            return;
+        }
+        
+        if (dto.getName() != null) {
+            category.setName(dto.getName());
+        }
+        
+        if (dto.getDescription() != null) {
+            category.setDescription(dto.getDescription());
+        }
+    }
+} 
