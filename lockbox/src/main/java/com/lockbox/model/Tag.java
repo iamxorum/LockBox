@@ -31,6 +31,9 @@ public class Tag {
     @ManyToMany(mappedBy = "tags")
     private Set<Password> passwords = new HashSet<>();
     
+    @ManyToMany(mappedBy = "tags")
+    private Set<SecureNote> secureNotes = new HashSet<>();
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
