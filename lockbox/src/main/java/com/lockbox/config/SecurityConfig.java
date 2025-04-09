@@ -1,9 +1,10 @@
 package com.lockbox.config;
 
+import com.lockbox.security.CsrfAccessDeniedHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,37 +12,44 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final Environment environment;
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
+    private final CsrfAccessDeniedHandler csrfAccessDeniedHandler;
 
-    public SecurityConfig(Environment environment, PasswordEncoder passwordEncoder, 
-                        UserDetailsService userDetailsService) {
-        this.environment = environment;
+    public SecurityConfig(PasswordEncoder passwordEncoder, 
+                        UserDetailsService userDetailsService,
+                        CsrfAccessDeniedHandler csrfAccessDeniedHandler) {
         this.passwordEncoder = passwordEncoder;
         this.userDetailsService = userDetailsService;
+        this.csrfAccessDeniedHandler = csrfAccessDeniedHandler;
     }
     
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder)
-                .and()
-                .build();
+        var builder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        builder.userDetailsService(userDetailsService)
+               .passwordEncoder(passwordEncoder);
+        return builder.build();
     }
 
     @Bean
     @Profile("dev")
     public SecurityFilterChain devSecurityFilterChain(HttpSecurity http) throws Exception {
         // For H2 Console
-        http.csrf(csrf -> csrf.ignoringRequestMatchers(new AntPathRequestMatcher("/h2-console/**")));
+        http.csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .ignoringRequestMatchers(
+                    new AntPathRequestMatcher("/h2-console/**"),
+                    new AntPathRequestMatcher("/api/**")
+                ));
+                
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
         
         // Permit H2 Console and Swagger UI
@@ -49,11 +57,39 @@ public class SecurityConfig {
             .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/login")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/passwords/new")).authenticated()
+            .requestMatchers(new AntPathRequestMatcher("/passwords/edit/**")).authenticated()
+            .requestMatchers(new AntPathRequestMatcher("/api/v1/passwords/**")).authenticated()
+            .requestMatchers(new AntPathRequestMatcher("/api/v1/passwords/user/**")).authenticated()
+            .requestMatchers(HttpMethod.GET, "/api/**").authenticated()
+            .requestMatchers(HttpMethod.POST, "/api/**").authenticated()
+            .requestMatchers(HttpMethod.PUT, "/api/**").authenticated()
+            .requestMatchers(HttpMethod.DELETE, "/api/**").authenticated()
             .anyRequest().authenticated()
         );
         
-        // Basic form login
-        http.formLogin(formLogin -> formLogin.permitAll());
+        // Configure form login with better success/failure handlers
+        http.formLogin(formLogin -> formLogin
+            .loginPage("/login")
+            .permitAll()
+            .defaultSuccessUrl("/dashboard", true)
+            .failureUrl("/login?error=true")
+        );
+        
+        // Configure logout
+        http.logout(logout -> logout
+            .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+            .logoutSuccessUrl("/login?logout=true")
+            .deleteCookies("JSESSIONID")
+            .invalidateHttpSession(true)
+            .permitAll()
+        );
+        
+        // Configure custom access denied handler
+        http.exceptionHandling(exceptionHandling -> 
+            exceptionHandling.accessDeniedHandler(csrfAccessDeniedHandler));
         
         return http.build();
     }
@@ -61,13 +97,46 @@ public class SecurityConfig {
     @Bean
     @Profile("!dev")
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .ignoringRequestMatchers(new AntPathRequestMatcher("/api/**")));
+                
         http.authorizeHttpRequests(auth -> auth
             .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/login")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/passwords/new")).authenticated()
+            .requestMatchers(new AntPathRequestMatcher("/passwords/edit/**")).authenticated()
+            .requestMatchers(new AntPathRequestMatcher("/api/v1/passwords/**")).authenticated()
+            .requestMatchers(new AntPathRequestMatcher("/api/v1/passwords/user/**")).authenticated()
+            .requestMatchers(HttpMethod.GET, "/api/**").authenticated()
+            .requestMatchers(HttpMethod.POST, "/api/**").authenticated()
+            .requestMatchers(HttpMethod.PUT, "/api/**").authenticated()
+            .requestMatchers(HttpMethod.DELETE, "/api/**").authenticated()
             .anyRequest().authenticated()
         );
         
-        http.formLogin(formLogin -> formLogin.permitAll());
+        // Configure form login with better success/failure handlers
+        http.formLogin(formLogin -> formLogin
+            .loginPage("/login")
+            .permitAll()
+            .defaultSuccessUrl("/dashboard", true)
+            .failureUrl("/login?error=true")
+        );
+        
+        // Configure logout
+        http.logout(logout -> logout
+            .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+            .logoutSuccessUrl("/login?logout=true")
+            .deleteCookies("JSESSIONID")
+            .invalidateHttpSession(true)
+            .permitAll()
+        );
+        
+        // Configure custom access denied handler
+        http.exceptionHandling(exceptionHandling -> 
+            exceptionHandling.accessDeniedHandler(csrfAccessDeniedHandler));
         
         return http.build();
     }
