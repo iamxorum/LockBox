@@ -7,11 +7,9 @@ import com.lockbox.dto.SecureNoteDto;
 import com.lockbox.mapper.SecureNoteMapper;
 import com.lockbox.model.Category;
 import com.lockbox.model.SecureNote;
-import com.lockbox.model.Tag;
 import com.lockbox.model.User;
 import com.lockbox.service.CategoryService;
 import com.lockbox.service.SecureNoteService;
-import com.lockbox.service.TagService;
 import com.lockbox.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,8 +18,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,17 +34,14 @@ public class SecureNoteController extends BaseController {
     private final SecureNoteService secureNoteService;
     private final UserService userService;
     private final CategoryService categoryService;
-    private final TagService tagService;
     private final SecureNoteMapper secureNoteMapper;
 
     @Autowired
     public SecureNoteController(SecureNoteService secureNoteService, UserService userService,
-                                CategoryService categoryService, TagService tagService,
-                                SecureNoteMapper secureNoteMapper) {
+                                CategoryService categoryService, SecureNoteMapper secureNoteMapper) {
         this.secureNoteService = secureNoteService;
         this.userService = userService;
         this.categoryService = categoryService;
-        this.tagService = tagService;
         this.secureNoteMapper = secureNoteMapper;
     }
 
@@ -57,14 +54,15 @@ public class SecureNoteController extends BaseController {
     })
     public ResponseEntity<ApiResponse<List<SecureNoteDto>>> getUserSecureNotes(
             @Parameter(description = "User ID", required = true) @PathVariable Long userId) {
-        if (!userService.existsById(userId)) {
-            return notFoundResponse("User not found with ID: " + userId);
-        }
         
-        List<SecureNoteDto> secureNotes = secureNoteService.findByUserId(userId).stream()
+        getUserOrThrow(userId);
+        
+        List<SecureNote> secureNotes = secureNoteService.findByUserId(userId);
+        List<SecureNoteDto> secureNoteDtos = secureNotes.stream()
                 .map(secureNoteMapper::toDto)
                 .collect(Collectors.toList());
-        return successResponse(secureNotes, "Secure notes retrieved successfully");
+        
+        return ResponseEntity.ok(ApiResponse.success("Secure notes retrieved successfully", secureNoteDtos));
     }
 
     @GetMapping("/{id}")
@@ -76,9 +74,11 @@ public class SecureNoteController extends BaseController {
     })
     public ResponseEntity<ApiResponse<SecureNoteDto>> getSecureNoteById(
             @Parameter(description = "Secure Note ID", required = true) @PathVariable Long id) {
-        return secureNoteService.findById(id)
-                .map(secureNote -> successResponse(secureNoteMapper.toDto(secureNote), "Secure note retrieved successfully"))
-                .orElse(notFoundResponse("Secure note not found with ID: " + id));
+        
+        SecureNote secureNote = getSecureNoteOrThrow(id);
+        SecureNoteDto secureNoteDto = secureNoteMapper.toDto(secureNote);
+        
+        return ResponseEntity.ok(ApiResponse.success("Secure note retrieved successfully", secureNoteDto));
     }
 
     @PostMapping("/user/{userId}")
@@ -94,12 +94,7 @@ public class SecureNoteController extends BaseController {
             @Parameter(description = "Secure Note creation data", required = true)
             @Valid @RequestBody SecureNoteCreationDto secureNoteCreationDto) {
         
-        // Check if user exists
-        User user = userService.findById(userId)
-                .orElse(null);
-        if (user == null) {
-            return notFoundResponse("User not found with ID: " + userId);
-        }
+        User user = getUserOrThrow(userId);
         
         // Create secure note entity
         SecureNote secureNote = secureNoteMapper.toEntity(secureNoteCreationDto);
@@ -108,65 +103,24 @@ public class SecureNoteController extends BaseController {
         // Set category if provided
         if (secureNoteCreationDto.getCategoryId() != null) {
             Category category = categoryService.findById(secureNoteCreationDto.getCategoryId())
-                    .orElse(null);
-            if (category == null) {
-                return notFoundResponse("Category not found with ID: " + secureNoteCreationDto.getCategoryId());
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                            "Category not found with ID: " + secureNoteCreationDto.getCategoryId()));
+            
+            // Verify that the category belongs to the user
+            if (!category.getUser().getId().equals(userId)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                        "Category with ID " + category.getId() + " does not belong to user with ID " + userId);
             }
-            secureNote.setCategory(category);
+            
+            secureNoteMapper.setCategoryInSecureNote(secureNote, category);
         }
         
         // Save secure note
-        final SecureNote savedSecureNote = secureNoteService.save(secureNote);
+        SecureNote savedSecureNote = secureNoteService.save(secureNote);
+        SecureNoteDto savedSecureNoteDto = secureNoteMapper.toDto(savedSecureNote);
         
-        // Add tags if provided
-        if (secureNoteCreationDto.getTagIds() != null && !secureNoteCreationDto.getTagIds().isEmpty()) {
-            for (Long tagId : secureNoteCreationDto.getTagIds()) {
-                tagService.findById(tagId).ifPresent(tag -> {
-                    secureNoteMapper.addTagToSecureNote(savedSecureNote, tag);
-                });
-            }
-            // Save again with tags
-            final SecureNote updatedSecureNote = secureNoteService.save(savedSecureNote);
-            return createdResponse(secureNoteMapper.toDto(updatedSecureNote), "Secure note created successfully");
-        }
-        
-        return createdResponse(secureNoteMapper.toDto(savedSecureNote), "Secure note created successfully");
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Update secure note", description = "Updates an existing secure note")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Secure note updated",
-                    content = @Content(schema = @Schema(implementation = SecureNoteDtoResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Secure note or category not found")
-    })
-    public ResponseEntity<ApiResponse<SecureNoteDto>> updateSecureNote(
-            @Parameter(description = "Secure Note ID", required = true) @PathVariable Long id,
-            @Parameter(description = "Secure Note update data", required = true)
-            @Valid @RequestBody SecureNoteCreationDto secureNoteCreationDto) {
-        
-        return secureNoteService.findById(id)
-                .<ResponseEntity<ApiResponse<SecureNoteDto>>>map(existingSecureNote -> {
-                    // Update fields
-                    secureNoteMapper.updateEntityFromDto(secureNoteCreationDto, existingSecureNote);
-                    
-                    // Update category if provided
-                    if (secureNoteCreationDto.getCategoryId() != null) {
-                        Category category = categoryService.findById(secureNoteCreationDto.getCategoryId())
-                                .orElse(null);
-                        if (category == null) {
-                            return notFoundResponse("Category not found with ID: " + secureNoteCreationDto.getCategoryId());
-                        }
-                        existingSecureNote.setCategory(category);
-                    }
-                    
-                    // Save secure note
-                    SecureNote updatedSecureNote = secureNoteService.save(existingSecureNote);
-                    
-                    return successResponse(secureNoteMapper.toDto(updatedSecureNote), "Secure note updated successfully");
-                })
-                .orElse(notFoundResponse("Secure note not found with ID: " + id));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Secure note created successfully", savedSecureNoteDto));
     }
 
     @DeleteMapping("/{id}")
@@ -178,90 +132,33 @@ public class SecureNoteController extends BaseController {
     public ResponseEntity<ApiResponse<Void>> deleteSecureNote(
             @Parameter(description = "Secure Note ID", required = true) @PathVariable Long id) {
         
+        SecureNote secureNote = getSecureNoteOrThrow(id);
+        secureNoteService.delete(secureNote);
+        
+        return ResponseEntity.ok(ApiResponse.success("Secure note deleted successfully"));
+    }
+
+    private User getUserOrThrow(Long userId) {
+        return userService.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
+    }
+
+    private SecureNote getSecureNoteOrThrow(Long id) {
         return secureNoteService.findById(id)
-                .<ResponseEntity<ApiResponse<Void>>>map(secureNote -> {
-                    secureNoteService.deleteById(id);
-                    return successResponse("Secure note deleted successfully");
-                })
-                .orElse(notFoundResponse("Secure note not found with ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Secure note not found with ID: " + id));
     }
 
-    @PostMapping("/{id}/tags/{tagId}")
-    @Operation(summary = "Add tag to secure note", description = "Adds a tag to a secure note")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Tag added to secure note",
-                    content = @Content(schema = @Schema(implementation = SecureNoteDtoResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Secure note or tag not found")
-    })
-    public ResponseEntity<ApiResponse<SecureNoteDto>> addTagToSecureNote(
-            @Parameter(description = "Secure Note ID", required = true) @PathVariable Long id,
-            @Parameter(description = "Tag ID", required = true) @PathVariable Long tagId) {
-        
-        // Check if secure note exists
-        SecureNote secureNote = secureNoteService.findById(id)
-                .orElse(null);
-        if (secureNote == null) {
-            return notFoundResponse("Secure note not found with ID: " + id);
-        }
-        
-        // Check if tag exists
-        Tag tag = tagService.findById(tagId)
-                .orElse(null);
-        if (tag == null) {
-            return notFoundResponse("Tag not found with ID: " + tagId);
-        }
-        
-        // Add tag to secure note
-        secureNoteMapper.addTagToSecureNote(secureNote, tag);
-        SecureNote updatedSecureNote = secureNoteService.save(secureNote);
-        
-        return successResponse(secureNoteMapper.toDto(updatedSecureNote), "Tag added to secure note successfully");
-    }
-
-    @DeleteMapping("/{id}/tags/{tagId}")
-    @Operation(summary = "Remove tag from secure note", description = "Removes a tag from a secure note")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Tag removed from secure note",
-                    content = @Content(schema = @Schema(implementation = SecureNoteDtoResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Secure note or tag not found")
-    })
-    public ResponseEntity<ApiResponse<SecureNoteDto>> removeTagFromSecureNote(
-            @Parameter(description = "Secure Note ID", required = true) @PathVariable Long id,
-            @Parameter(description = "Tag ID", required = true) @PathVariable Long tagId) {
-        
-        // Check if secure note exists
-        SecureNote secureNote = secureNoteService.findById(id)
-                .orElse(null);
-        if (secureNote == null) {
-            return notFoundResponse("Secure note not found with ID: " + id);
-        }
-        
-        // Check if tag exists
-        Tag tag = tagService.findById(tagId)
-                .orElse(null);
-        if (tag == null) {
-            return notFoundResponse("Tag not found with ID: " + tagId);
-        }
-        
-        // Remove tag from secure note
-        secureNoteMapper.removeTagFromSecureNote(secureNote, tag);
-        SecureNote updatedSecureNote = secureNoteService.save(secureNote);
-        
-        return successResponse(secureNoteMapper.toDto(updatedSecureNote), "Tag removed from secure note successfully");
-    }
-
-    // Schema classes for Swagger documentation
     @SuppressWarnings("unused")
     private static class SecureNoteDtoResponse extends ApiResponse<SecureNoteDto> {
         public SecureNoteDtoResponse() {
-            super(true, "");
+            super(true, "Secure note retrieved successfully");
         }
     }
-    
+
     @SuppressWarnings("unused")
     private static class SecureNoteDtoListResponse extends ApiResponse<List<SecureNoteDto>> {
         public SecureNoteDtoListResponse() {
-            super(true, "");
+            super(true, "Secure notes retrieved successfully");
         }
     }
 } 

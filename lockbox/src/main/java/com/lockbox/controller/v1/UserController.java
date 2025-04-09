@@ -14,11 +14,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -34,20 +35,6 @@ public class UserController extends BaseController {
         this.userMapper = userMapper;
     }
 
-    @GetMapping
-    @Operation(summary = "Get all users", description = "Retrieves a list of all users")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Users found",
-                    content = @Content(schema = @Schema(implementation = UserDtoListResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
-    })
-    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
-        List<UserDto> users = userService.findAll().stream()
-                .map(userMapper::toDto)
-                .collect(Collectors.toList());
-        return successResponse(users, "Users retrieved successfully");
-    }
-
     @GetMapping("/{id}")
     @Operation(summary = "Get user by ID", description = "Retrieves a user by their ID")
     @ApiResponses(value = {
@@ -57,10 +44,11 @@ public class UserController extends BaseController {
     })
     public ResponseEntity<ApiResponse<UserDto>> getUserById(
             @Parameter(description = "User ID", required = true) @PathVariable Long id) {
-        return userService.findById(id)
-                .<ResponseEntity<ApiResponse<UserDto>>>map(user -> 
-                    successResponse(userMapper.toDto(user), "User retrieved successfully"))
-                .orElse(notFoundResponse("User not found with ID: " + id));
+        
+        User user = getUserOrThrow(id);
+        UserDto userDto = userMapper.toDto(user);
+        
+        return ResponseEntity.ok(ApiResponse.success("User retrieved successfully", userDto));
     }
 
     @PostMapping
@@ -74,80 +62,46 @@ public class UserController extends BaseController {
     public ResponseEntity<ApiResponse<UserDto>> createUser(
             @Parameter(description = "User creation data", required = true)
             @Valid @RequestBody UserCreationDto userCreationDto) {
-        // Check if username or email already exists
+        
+        // Check if username already exists
         if (userService.existsByUsername(userCreationDto.getUsername())) {
-            return badRequestResponse("Username already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                    "Username '" + userCreationDto.getUsername() + "' is already taken");
         }
+        
+        // Check if email already exists
         if (userService.existsByEmail(userCreationDto.getEmail())) {
-            return badRequestResponse("Email already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                    "Email '" + userCreationDto.getEmail() + "' is already registered");
         }
-
+        
+        // Create user
         User user = userMapper.toEntity(userCreationDto);
+        
+        // Save user
         User savedUser = userService.save(user);
-        return createdResponse(userMapper.toDto(savedUser), "User created successfully");
+        UserDto savedUserDto = userMapper.toDto(savedUser);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("User created successfully", savedUserDto));
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update user", description = "Updates an existing user")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User updated",
-                    content = @Content(schema = @Schema(implementation = UserDtoResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Username or email already exists")
-    })
-    public ResponseEntity<ApiResponse<UserDto>> updateUser(
-            @Parameter(description = "User ID", required = true) @PathVariable Long id,
-            @Parameter(description = "User update data", required = true)
-            @Valid @RequestBody UserCreationDto userCreationDto) {
+    private User getUserOrThrow(Long id) {
         return userService.findById(id)
-                .<ResponseEntity<ApiResponse<UserDto>>>map(existingUser -> {
-                    // Check if username is taken by another user
-                    if (!existingUser.getUsername().equals(userCreationDto.getUsername()) &&
-                            userService.existsByUsername(userCreationDto.getUsername())) {
-                        return badRequestResponse("Username already exists");
-                    }
-                    // Check if email is taken by another user
-                    if (!existingUser.getEmail().equals(userCreationDto.getEmail()) &&
-                            userService.existsByEmail(userCreationDto.getEmail())) {
-                        return badRequestResponse("Email already exists");
-                    }
-
-                    userMapper.updateEntityFromDto(userCreationDto, existingUser);
-                    User updatedUser = userService.save(existingUser);
-                    return successResponse(userMapper.toDto(updatedUser), "User updated successfully");
-                })
-                .orElse(notFoundResponse("User not found with ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + id));
     }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Delete user", description = "Deletes a user by their ID")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User deleted"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found")
-    })
-    public ResponseEntity<ApiResponse<Void>> deleteUser(
-            @Parameter(description = "User ID", required = true) @PathVariable Long id) {
-        return userService.findById(id)
-                .<ResponseEntity<ApiResponse<Void>>>map(user -> {
-                    userService.deleteById(id);
-                    return successResponse("User deleted successfully");
-                })
-                .orElse(notFoundResponse("User not found with ID: " + id));
-    }
-
-    // Schema classes for Swagger documentation
     @SuppressWarnings("unused")
     private static class UserDtoResponse extends ApiResponse<UserDto> {
         public UserDtoResponse() {
-            super(true, "");
+            super(true, "User retrieved successfully");
         }
     }
-    
+
     @SuppressWarnings("unused")
     private static class UserDtoListResponse extends ApiResponse<List<UserDto>> {
         public UserDtoListResponse() {
-            super(true, "");
+            super(true, "Users retrieved successfully");
         }
     }
 } 

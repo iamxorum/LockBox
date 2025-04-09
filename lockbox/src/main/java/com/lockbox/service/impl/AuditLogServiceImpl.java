@@ -7,12 +7,15 @@ import com.lockbox.repository.UserRepository;
 import com.lockbox.service.AuditLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional(readOnly = true)
 public class AuditLogServiceImpl implements AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
@@ -35,16 +38,19 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
     
     @Override
+    @Transactional
     public AuditLog save(AuditLog auditLog) {
         return auditLogRepository.save(auditLog);
     }
     
     @Override
+    @Transactional
     public void delete(AuditLog auditLog) {
         auditLogRepository.delete(auditLog);
     }
     
     @Override
+    @Transactional
     public void deleteById(Long id) {
         auditLogRepository.deleteById(id);
     }
@@ -60,16 +66,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
     
     @Override
-    public List<AuditLog> findByUserIdAndTimeRange(Long userId, LocalDateTime start, LocalDateTime end) {
-        return auditLogRepository.findByUserIdAndTimestampBetween(userId, start, end);
-    }
-    
-    @Override
-    public List<AuditLog> findByUserIdAndAction(Long userId, String action) {
-        return auditLogRepository.findByUserIdAndAction(userId, action);
-    }
-    
-    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AuditLog createAuditLog(Long userId, String action, String entityType, Long entityId, String details) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));

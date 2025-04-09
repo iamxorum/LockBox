@@ -2,16 +2,18 @@ package com.lockbox.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -33,27 +35,40 @@ public class User {
     
     private String lastName;
     
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-    
-    private LocalDateTime updatedAt;
-    
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Password> passwords = new HashSet<>();
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Category> categories = new HashSet<>();
+    private Set<SecureNote> secureNotes = new HashSet<>();
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AuditLog> auditLogs = new HashSet<>();
     
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    /**
+     * Custom toString implementation to avoid lazy loading issues
+     */
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User user)) return false;
+        return Objects.equals(id, user.id) &&
+               Objects.equals(username, user.username) &&
+               Objects.equals(email, user.email);
     }
     
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, username, email);
     }
 } 

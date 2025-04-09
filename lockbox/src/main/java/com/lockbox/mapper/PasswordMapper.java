@@ -37,13 +37,24 @@ public class PasswordMapper {
         
         if (password.getCategory() != null) {
             dto.setCategoryId(password.getCategory().getId());
-            dto.setCategoryName(password.getCategory().getName());
+            
+            // Safer way to access category name - avoid LazyInitializationException
+            try {
+                dto.setCategoryName(password.getCategory().getName());
+            } catch (Exception e) {
+                // If we can't access the name due to lazy loading, just set it to null
+                dto.setCategoryName(null);
+            }
         }
         
-        if (password.getTags() != null) {
-            dto.setTags(password.getTags().stream()
-                    .map(tagMapper::toDto)
-                    .collect(Collectors.toSet()));
+        if (password.getTags() != null && !password.getTags().isEmpty()) {
+            try {
+                dto.setTags(password.getTags().stream()
+                        .map(tagMapper::toDto)
+                        .collect(Collectors.toSet()));
+            } catch (Exception e) {
+                // If we can't access tags due to lazy loading, leave as null
+            }
         }
         
         return dto;

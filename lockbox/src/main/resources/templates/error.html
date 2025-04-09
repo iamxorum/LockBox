@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - LockBox</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --success: #10b981;
+            --success-dark: #0e9f6e;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --info-dark: #2563eb;
+            --light: #f9fafb;
+            --dark: #1f2937;
+            --gray: #6b7280;
+            --surface: #ffffff;
+            --border: #e5e7eb;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #4361ee 0%, #3730a3 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: var(--dark);
+        }
+        
+        .error-container {
+            background-color: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            width: 500px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--danger);
+            margin-top: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .error-code {
+            font-size: 5rem;
+            font-weight: 800;
+            color: var(--danger);
+            margin: 1rem 0;
+            line-height: 1;
+        }
+        
+        .error-message {
+            color: var(--gray);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .error-description {
+            background-color: var(--light);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: left;
+            margin: 1.5rem 0;
+        }
+        
+        .error-details {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: left;
+            margin-top: 2rem;
+            font-family: monospace;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+        }
+        
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+            gap: 0.5rem;
+        }
+        
+        .button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 97, 238, 0.2);
+        }
+        
+        .icon {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="icon">❌</div>
+        <h1>Oops! Something went wrong</h1>
+        
+        <div class="error-code" th:text="${status}">404</div>
+        
+        <div class="error-message" th:text="${error}">Not Found</div>
+        
+        <div class="error-description" th:if="${status == 404}">
+            <p>The page you're looking for doesn't exist or has been moved.</p>
+            <p>Please check the URL or navigate back to a working page.</p>
+        </div>
+        
+        <div class="error-description" th:if="${status == 403}">
+            <p>You don't have permission to access this resource.</p>
+            <p>Please check your credentials or contact your administrator.</p>
+        </div>
+        
+        <div class="error-description" th:if="${status == 500}">
+            <p>We're experiencing some internal server problems.</p>
+            <p>Please try again later or contact support if the issue persists.</p>
+        </div>
+        
+        <a href="/dashboard" class="button">
+            <span>🏠</span>
+            <span>Go to Dashboard</span>
+        </a>
+        
+        <div class="error-details" th:if="${trace}">
+            <h3>Technical Details:</h3>
+            <p th:text="${trace}"></p>
+        </div>
+    </div>
+</body>
+</html> 

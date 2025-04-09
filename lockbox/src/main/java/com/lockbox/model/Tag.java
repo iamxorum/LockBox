@@ -2,18 +2,23 @@ package com.lockbox.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
 @Table(name = "tags")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"passwords", "secureNotes"})
 public class Tag {
     
     @Id
@@ -42,5 +47,18 @@ public class Tag {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Tag tag)) return false;
+        return Objects.equals(id, tag.id) &&
+               Objects.equals(name, tag.name);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
     }
 } 

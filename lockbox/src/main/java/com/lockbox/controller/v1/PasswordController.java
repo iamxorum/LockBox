@@ -7,11 +7,9 @@ import com.lockbox.dto.PasswordDto;
 import com.lockbox.mapper.PasswordMapper;
 import com.lockbox.model.Category;
 import com.lockbox.model.Password;
-import com.lockbox.model.Tag;
 import com.lockbox.model.User;
 import com.lockbox.service.CategoryService;
 import com.lockbox.service.PasswordService;
-import com.lockbox.service.TagService;
 import com.lockbox.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,8 +18,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,17 +34,14 @@ public class PasswordController extends BaseController {
     private final PasswordService passwordService;
     private final UserService userService;
     private final CategoryService categoryService;
-    private final TagService tagService;
     private final PasswordMapper passwordMapper;
 
     @Autowired
     public PasswordController(PasswordService passwordService, UserService userService,
-                              CategoryService categoryService, TagService tagService,
-                              PasswordMapper passwordMapper) {
+                              CategoryService categoryService, PasswordMapper passwordMapper) {
         this.passwordService = passwordService;
         this.userService = userService;
         this.categoryService = categoryService;
-        this.tagService = tagService;
         this.passwordMapper = passwordMapper;
     }
 
@@ -57,14 +54,15 @@ public class PasswordController extends BaseController {
     })
     public ResponseEntity<ApiResponse<List<PasswordDto>>> getUserPasswords(
             @Parameter(description = "User ID", required = true) @PathVariable Long userId) {
-        if (!userService.existsById(userId)) {
-            return notFoundResponse("User not found with ID: " + userId);
-        }
         
-        List<PasswordDto> passwords = passwordService.findByUserId(userId).stream()
+        getUserOrThrow(userId);
+        
+        List<Password> passwords = passwordService.findByUserId(userId);
+        List<PasswordDto> passwordDtos = passwords.stream()
                 .map(passwordMapper::toDto)
                 .collect(Collectors.toList());
-        return successResponse(passwords, "Passwords retrieved successfully");
+        
+        return ResponseEntity.ok(ApiResponse.success("Passwords retrieved successfully", passwordDtos));
     }
 
     @GetMapping("/{id}")
@@ -76,10 +74,11 @@ public class PasswordController extends BaseController {
     })
     public ResponseEntity<ApiResponse<PasswordDto>> getPasswordById(
             @Parameter(description = "Password ID", required = true) @PathVariable Long id) {
-        return passwordService.findById(id)
-                .<ResponseEntity<ApiResponse<PasswordDto>>>map(password -> 
-                    successResponse(passwordMapper.toDto(password), "Password retrieved successfully"))
-                .orElse(notFoundResponse("Password not found with ID: " + id));
+        
+        Password password = getPasswordOrThrow(id);
+        PasswordDto passwordDto = passwordMapper.toDto(password);
+        
+        return ResponseEntity.ok(ApiResponse.success("Password retrieved successfully", passwordDto));
     }
 
     @PostMapping("/user/{userId}")
@@ -95,79 +94,33 @@ public class PasswordController extends BaseController {
             @Parameter(description = "Password creation data", required = true)
             @Valid @RequestBody PasswordCreationDto passwordCreationDto) {
         
-        // Check if user exists
-        User user = userService.findById(userId)
-                .orElse(null);
-        if (user == null) {
-            return notFoundResponse("User not found with ID: " + userId);
-        }
+        User user = getUserOrThrow(userId);
         
-        // Create password entity
+        // Create password
         Password password = passwordMapper.toEntity(passwordCreationDto);
         password.setUser(user);
         
         // Set category if provided
         if (passwordCreationDto.getCategoryId() != null) {
             Category category = categoryService.findById(passwordCreationDto.getCategoryId())
-                    .orElse(null);
-            if (category == null) {
-                return notFoundResponse("Category not found with ID: " + passwordCreationDto.getCategoryId());
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                            "Category not found with ID: " + passwordCreationDto.getCategoryId()));
+            
+            // Verify that the category belongs to the user
+            if (!category.getUser().getId().equals(userId)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
+                        "Category with ID " + category.getId() + " does not belong to user with ID " + userId);
             }
-            password.setCategory(category);
+            
+            passwordMapper.setCategoryInPassword(password, category);
         }
         
         // Save password
-        final Password savedPassword = passwordService.save(password);
+        Password savedPassword = passwordService.save(password);
+        PasswordDto savedPasswordDto = passwordMapper.toDto(savedPassword);
         
-        // Add tags if provided
-        if (passwordCreationDto.getTagIds() != null && !passwordCreationDto.getTagIds().isEmpty()) {
-            for (Long tagId : passwordCreationDto.getTagIds()) {
-                tagService.findById(tagId).ifPresent(tag -> {
-                    passwordMapper.addTagToPassword(savedPassword, tag);
-                });
-            }
-            // Save again with tags
-            final Password updatedPassword = passwordService.save(savedPassword);
-            return createdResponse(passwordMapper.toDto(updatedPassword), "Password created successfully");
-        }
-        
-        return createdResponse(passwordMapper.toDto(savedPassword), "Password created successfully");
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Update password", description = "Updates an existing password")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Password updated",
-                    content = @Content(schema = @Schema(implementation = PasswordDtoResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Password or category not found")
-    })
-    public ResponseEntity<ApiResponse<PasswordDto>> updatePassword(
-            @Parameter(description = "Password ID", required = true) @PathVariable Long id,
-            @Parameter(description = "Password update data", required = true)
-            @Valid @RequestBody PasswordCreationDto passwordCreationDto) {
-        
-        return passwordService.findById(id)
-                .<ResponseEntity<ApiResponse<PasswordDto>>>map(existingPassword -> {
-                    // Update fields
-                    passwordMapper.updateEntityFromDto(passwordCreationDto, existingPassword);
-                    
-                    // Update category if provided
-                    if (passwordCreationDto.getCategoryId() != null) {
-                        Category category = categoryService.findById(passwordCreationDto.getCategoryId())
-                                .orElse(null);
-                        if (category == null) {
-                            return notFoundResponse("Category not found with ID: " + passwordCreationDto.getCategoryId());
-                        }
-                        existingPassword.setCategory(category);
-                    }
-                    
-                    // Save password
-                    Password updatedPassword = passwordService.save(existingPassword);
-                    
-                    return successResponse(passwordMapper.toDto(updatedPassword), "Password updated successfully");
-                })
-                .orElse(notFoundResponse("Password not found with ID: " + id));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Password created successfully", savedPasswordDto));
     }
 
     @DeleteMapping("/{id}")
@@ -179,90 +132,33 @@ public class PasswordController extends BaseController {
     public ResponseEntity<ApiResponse<Void>> deletePassword(
             @Parameter(description = "Password ID", required = true) @PathVariable Long id) {
         
+        Password password = getPasswordOrThrow(id);
+        passwordService.delete(password);
+        
+        return ResponseEntity.ok(ApiResponse.success("Password deleted successfully"));
+    }
+
+    private User getUserOrThrow(Long userId) {
+        return userService.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
+    }
+
+    private Password getPasswordOrThrow(Long id) {
         return passwordService.findById(id)
-                .<ResponseEntity<ApiResponse<Void>>>map(password -> {
-                    passwordService.deleteById(id);
-                    return successResponse("Password deleted successfully");
-                })
-                .orElse(notFoundResponse("Password not found with ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Password not found with ID: " + id));
     }
 
-    @PostMapping("/{id}/tags/{tagId}")
-    @Operation(summary = "Add tag to password", description = "Adds a tag to a password")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Tag added to password",
-                    content = @Content(schema = @Schema(implementation = PasswordDtoResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Password or tag not found")
-    })
-    public ResponseEntity<ApiResponse<PasswordDto>> addTagToPassword(
-            @Parameter(description = "Password ID", required = true) @PathVariable Long id,
-            @Parameter(description = "Tag ID", required = true) @PathVariable Long tagId) {
-        
-        // Check if password exists
-        Password password = passwordService.findById(id)
-                .orElse(null);
-        if (password == null) {
-            return notFoundResponse("Password not found with ID: " + id);
-        }
-        
-        // Check if tag exists
-        Tag tag = tagService.findById(tagId)
-                .orElse(null);
-        if (tag == null) {
-            return notFoundResponse("Tag not found with ID: " + tagId);
-        }
-        
-        // Add tag to password
-        passwordMapper.addTagToPassword(password, tag);
-        Password updatedPassword = passwordService.save(password);
-        
-        return successResponse(passwordMapper.toDto(updatedPassword), "Tag added to password successfully");
-    }
-
-    @DeleteMapping("/{id}/tags/{tagId}")
-    @Operation(summary = "Remove tag from password", description = "Removes a tag from a password")
-    @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Tag removed from password",
-                    content = @Content(schema = @Schema(implementation = PasswordDtoResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Password or tag not found")
-    })
-    public ResponseEntity<ApiResponse<PasswordDto>> removeTagFromPassword(
-            @Parameter(description = "Password ID", required = true) @PathVariable Long id,
-            @Parameter(description = "Tag ID", required = true) @PathVariable Long tagId) {
-        
-        // Check if password exists
-        Password password = passwordService.findById(id)
-                .orElse(null);
-        if (password == null) {
-            return notFoundResponse("Password not found with ID: " + id);
-        }
-        
-        // Check if tag exists
-        Tag tag = tagService.findById(tagId)
-                .orElse(null);
-        if (tag == null) {
-            return notFoundResponse("Tag not found with ID: " + tagId);
-        }
-        
-        // Remove tag from password
-        passwordMapper.removeTagFromPassword(password, tag);
-        Password updatedPassword = passwordService.save(password);
-        
-        return successResponse(passwordMapper.toDto(updatedPassword), "Tag removed from password successfully");
-    }
-
-    // Schema classes for Swagger documentation
     @SuppressWarnings("unused")
     private static class PasswordDtoResponse extends ApiResponse<PasswordDto> {
         public PasswordDtoResponse() {
-            super(true, "");
+            super(true, "Password retrieved successfully");
         }
     }
-    
+
     @SuppressWarnings("unused")
     private static class PasswordDtoListResponse extends ApiResponse<List<PasswordDto>> {
         public PasswordDtoListResponse() {
-            super(true, "");
+            super(true, "Passwords retrieved successfully");
         }
     }
 } 

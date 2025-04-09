@@ -26,7 +26,7 @@ public class PasswordServiceImpl implements PasswordService {
     
     @Override
     public Optional<Password> findById(Long id) {
-        return passwordRepository.findById(id);
+        return passwordRepository.findByIdWithCategory(id);
     }
     
     @Override
@@ -52,20 +52,5 @@ public class PasswordServiceImpl implements PasswordService {
     @Override
     public List<Password> findByUserId(Long userId) {
         return passwordRepository.findByUserId(userId);
-    }
-    
-    @Override
-    public List<Password> findByUserIdAndCategoryId(Long userId, Long categoryId) {
-        return passwordRepository.findByUserIdAndCategoryId(userId, categoryId);
-    }
-    
-    @Override
-    public List<Password> searchByTitle(Long userId, String title) {
-        return passwordRepository.findByUserIdAndTitleContainingIgnoreCase(userId, title);
-    }
-    
-    @Override
-    public List<Password> searchByUrl(Long userId, String url) {
-        return passwordRepository.findByUserIdAndUrlContainingIgnoreCase(userId, url);
     }
 } 

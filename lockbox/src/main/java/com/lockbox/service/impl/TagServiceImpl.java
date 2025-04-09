@@ -50,21 +50,6 @@ public class TagServiceImpl implements TagService {
     }
     
     @Override
-    public List<Tag> findByPasswordId(Long passwordId) {
-        return tagRepository.findByPasswordsId(passwordId);
-    }
-    
-    @Override
-    public List<Tag> findBySecureNoteId(Long secureNoteId) {
-        return tagRepository.findBySecureNotesId(secureNoteId);
-    }
-    
-    @Override
-    public Optional<Tag> findByName(String name) {
-        return tagRepository.findByName(name);
-    }
-    
-    @Override
     public boolean existsByName(String name) {
         return tagRepository.existsByName(name);
     }

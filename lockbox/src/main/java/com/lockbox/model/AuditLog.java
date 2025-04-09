@@ -39,4 +39,17 @@ public class AuditLog {
     protected void onCreate() {
         timestamp = LocalDateTime.now();
     }
+    
+    @Override
+    public String toString() {
+        return "AuditLog{" +
+                "id=" + id +
+                ", action='" + action + '\'' +
+                ", entityType='" + entityType + '\'' +
+                ", entityId=" + entityId +
+                ", timestamp=" + timestamp +
+                ", details='" + details + '\'' +
+                ", userId=" + (user != null ? user.getId() : null) +
+                '}';
+    }
 } 

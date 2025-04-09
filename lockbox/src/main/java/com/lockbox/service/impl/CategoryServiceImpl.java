@@ -55,11 +55,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
     
     @Override
-    public Optional<Category> findByUserIdAndName(Long userId, String name) {
-        return categoryRepository.findByUserIdAndName(userId, name);
-    }
-    
-    @Override
     public boolean existsByUserIdAndName(Long userId, String name) {
         return categoryRepository.existsByUserIdAndName(userId, name);
     }
