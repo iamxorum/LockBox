@@ -31,7 +31,7 @@ public class PasswordViewController {
         password.setUser(user);
         model.addAttribute("password", password);
         model.addAttribute("currentUserId", user.getId());
-        return "password-form";
+        return "password/password-form";
     }
 
     @GetMapping("/edit/{id}")
@@ -51,14 +51,14 @@ public class PasswordViewController {
         
         model.addAttribute("password", password);
         model.addAttribute("currentUserId", authenticatedUser.getId());
-        return "password-form";
+        return "password/password-form";
     }
 
     @GetMapping
     public String listPasswords(Model model, Authentication authentication) {
         var user = userService.findByUsername(authentication.getName()).orElseThrow();
         model.addAttribute("passwords", passwordService.findByUserId(user.getId()));
-        return "password-list";
+        return "password/password-list";
     }
 
     @ExceptionHandler(SecurityException.class)

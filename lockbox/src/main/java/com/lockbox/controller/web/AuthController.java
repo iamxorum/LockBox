@@ -37,6 +37,6 @@ public class AuthController {
             }
         }
         
-        return "login";
+        return "auth/login";
     }
 } 

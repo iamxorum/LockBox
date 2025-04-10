@@ -65,7 +65,7 @@ public class DashboardController {
         securityStats.put("reusedPasswordCount", countReusedPasswords(passwords));
         model.addAttribute("securityStats", securityStats);
         
-        return "dashboard";
+        return "dashboard/dashboard";
     }
     
     private int countWeakPasswords(List<Password> passwords) {
