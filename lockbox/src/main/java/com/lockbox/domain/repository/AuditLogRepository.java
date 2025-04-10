@@ -16,6 +16,12 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     @Query("SELECT a FROM AuditLog a JOIN FETCH a.user WHERE a.user.id = :userId")
     List<AuditLog> findByUserId(@Param("userId") Long userId);
     
+    @Query("SELECT a FROM AuditLog a JOIN FETCH a.user WHERE a.user.id = :userId ORDER BY a.timestamp DESC")
+    List<AuditLog> findByUserIdOrderByTimestampDesc(@Param("userId") Long userId);
+    
+    @Query("SELECT a FROM AuditLog a JOIN FETCH a.user WHERE a.user.id = :userId ORDER BY a.timestamp DESC")
+    List<AuditLog> findTopByUserIdOrderByTimestampDesc(@Param("userId") Long userId, @Param("limit") int limit);
+    
     @Query("SELECT a FROM AuditLog a JOIN FETCH a.user WHERE a.user.id = :userId AND a.timestamp BETWEEN :start AND :end")
     List<AuditLog> findByUserIdAndTimestampBetween(
             @Param("userId") Long userId, 

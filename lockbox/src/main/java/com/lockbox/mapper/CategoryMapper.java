@@ -21,6 +21,11 @@ public class CategoryMapper {
         dto.setCreatedAt(category.getCreatedAt());
         dto.setUpdatedAt(category.getUpdatedAt());
         
+        // Map color if it exists
+        if (category.getColor() != null) {
+            dto.setColor(category.getColor());
+        }
+        
         return dto;
     }
     
@@ -32,6 +37,7 @@ public class CategoryMapper {
         Category category = new Category();
         category.setName(dto.getName());
         category.setDescription(dto.getDescription());
+        category.setColor(dto.getColor());
         
         return category;
     }
@@ -47,6 +53,10 @@ public class CategoryMapper {
         
         if (dto.getDescription() != null) {
             category.setDescription(dto.getDescription());
+        }
+        
+        if (dto.getColor() != null) {
+            category.setColor(dto.getColor());
         }
     }
 } 

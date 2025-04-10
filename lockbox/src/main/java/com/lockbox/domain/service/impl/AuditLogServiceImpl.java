@@ -7,6 +7,7 @@ import com.lockbox.domain.model.User;
 import com.lockbox.domain.service.AuditLogService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -63,7 +65,15 @@ public class AuditLogServiceImpl implements AuditLogService {
     
     @Override
     public List<AuditLog> findByUserId(Long userId) {
-        return auditLogRepository.findByUserId(userId);
+        return auditLogRepository.findByUserIdOrderByTimestampDesc(userId);
+    }
+    
+    @Override
+    public List<AuditLog> findRecentByUserId(Long userId, int limit) {
+        return auditLogRepository.findByUserIdOrderByTimestampDesc(userId)
+                .stream()
+                .limit(limit)
+                .collect(Collectors.toList());
     }
     
     @Override

@@ -28,6 +28,7 @@ public class DashboardController {
     private final PasswordService passwordService;
     private final SecureNoteService secureNoteService;
     private final AuditLogService auditLogService;
+    private static final int RECENT_ACTIVITY_LIMIT = 5;
 
     @Autowired
     public DashboardController(UserService userService, 
@@ -56,8 +57,7 @@ public class DashboardController {
         model.addAttribute("secureNotes", secureNotes);
         model.addAttribute("secureNoteCount", secureNotes.size());
         
-        // Get user's recent activity
-        List<AuditLog> recentActivity = auditLogService.findByUserId(user.getId());
+        List<AuditLog> recentActivity = auditLogService.findRecentByUserId(user.getId(), RECENT_ACTIVITY_LIMIT);
         model.addAttribute("recentActivity", recentActivity);
         
         // Add security overview stats

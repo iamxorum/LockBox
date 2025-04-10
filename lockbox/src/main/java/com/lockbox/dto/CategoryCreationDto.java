@@ -16,4 +16,6 @@ public class CategoryCreationDto {
     private String name;
     
     private String description;
+    
+    private String color;
 } 

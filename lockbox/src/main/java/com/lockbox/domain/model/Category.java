@@ -30,6 +30,9 @@ public class Category {
     
     private String description;
     
+    @Column(length = 20)
+    private String color;
+    
     @Column(nullable = false)
     private LocalDateTime createdAt;
     
