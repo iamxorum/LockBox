@@ -17,7 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import com.lockbox.exception.ResourceAlreadyExistsException;
+import com.lockbox.exception.ResourceNotFoundException;
 
 import java.util.List;
 
@@ -65,14 +66,12 @@ public class UserController extends BaseController {
         
         // Check if username already exists
         if (userService.existsByUsername(userCreationDto.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, 
-                    "Username '" + userCreationDto.getUsername() + "' is already taken");
+            throw new ResourceAlreadyExistsException("User", "username", userCreationDto.getUsername());
         }
         
         // Check if email already exists
         if (userService.existsByEmail(userCreationDto.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, 
-                    "Email '" + userCreationDto.getEmail() + "' is already registered");
+            throw new ResourceAlreadyExistsException("User", "email", userCreationDto.getEmail());
         }
         
         // Create user
@@ -88,7 +87,7 @@ public class UserController extends BaseController {
 
     private User getUserOrThrow(Long id) {
         return userService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
     }
 
     @SuppressWarnings("unused")

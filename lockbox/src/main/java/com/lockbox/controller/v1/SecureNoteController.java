@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import com.lockbox.exception.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -103,13 +103,11 @@ public class SecureNoteController extends BaseController {
         // Set category if provided
         if (secureNoteCreationDto.getCategoryId() != null) {
             Category category = categoryService.findById(secureNoteCreationDto.getCategoryId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
-                            "Category not found with ID: " + secureNoteCreationDto.getCategoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Category", "id", secureNoteCreationDto.getCategoryId()));
             
             // Verify that the category belongs to the user
             if (!category.getUser().getId().equals(userId)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, 
-                        "Category with ID " + category.getId() + " does not belong to user with ID " + userId);
+                throw new ResourceNotFoundException("Category", "id", secureNoteCreationDto.getCategoryId());
             }
             
             secureNoteMapper.setCategoryInSecureNote(secureNote, category);
@@ -140,12 +138,12 @@ public class SecureNoteController extends BaseController {
 
     private User getUserOrThrow(Long userId) {
         return userService.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
     }
 
     private SecureNote getSecureNoteOrThrow(Long id) {
         return secureNoteService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Secure note not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("SecureNote", "id", id));
     }
 
     @SuppressWarnings("unused")

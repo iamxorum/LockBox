@@ -20,8 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
+import com.lockbox.exception.ResourceNotFoundException;
+import com.lockbox.exception.ResourceAlreadyExistsException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -94,8 +94,7 @@ public class CategoryController extends BaseController {
         User user = getUserOrThrow(userId);
         
         if (categoryService.existsByUserIdAndName(userId, categoryCreationDto.getName())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, 
-                    "Category with name '" + categoryCreationDto.getName() + "' already exists for this user");
+            throw new ResourceAlreadyExistsException("Category", "name", categoryCreationDto.getName());
         }
         
         Category category = categoryMapper.toEntity(categoryCreationDto);
@@ -110,12 +109,12 @@ public class CategoryController extends BaseController {
 
     private User getUserOrThrow(Long userId) {
         return userService.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
     }
 
     private Category getCategoryOrThrow(Long id) {
         return categoryService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
     }
 
     @SuppressWarnings("unused")

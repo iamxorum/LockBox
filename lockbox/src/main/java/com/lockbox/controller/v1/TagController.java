@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import com.lockbox.exception.ResourceAlreadyExistsException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -65,8 +65,7 @@ public class TagController extends BaseController {
         
         // Check if tag name already exists
         if (tagService.existsByName(tagCreationDto.getName())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, 
-                    "Tag with name '" + tagCreationDto.getName() + "' already exists");
+            throw new ResourceAlreadyExistsException("Tag", "name", tagCreationDto.getName());
         }
         
         // Create tag
