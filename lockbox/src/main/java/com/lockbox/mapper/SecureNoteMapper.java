@@ -1,10 +1,11 @@
 package com.lockbox.mapper;
 
+import com.lockbox.domain.model.Category;
+import com.lockbox.domain.model.SecureNote;
+import com.lockbox.domain.model.Tag;
 import com.lockbox.dto.SecureNoteCreationDto;
 import com.lockbox.dto.SecureNoteDto;
-import com.lockbox.model.Category;
-import com.lockbox.model.SecureNote;
-import com.lockbox.model.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

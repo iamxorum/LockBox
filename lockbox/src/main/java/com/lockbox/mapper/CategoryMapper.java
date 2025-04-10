@@ -1,8 +1,9 @@
 package com.lockbox.mapper;
 
+import com.lockbox.domain.model.Category;
 import com.lockbox.dto.CategoryCreationDto;
 import com.lockbox.dto.CategoryDto;
-import com.lockbox.model.Category;
+
 import org.springframework.stereotype.Component;
 
 @Component

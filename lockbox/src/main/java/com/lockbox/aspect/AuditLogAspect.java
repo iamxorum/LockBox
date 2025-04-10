@@ -1,8 +1,9 @@
 package com.lockbox.aspect;
 
-import com.lockbox.model.User;
-import com.lockbox.repository.UserRepository;
-import com.lockbox.service.AuditLogService;
+import com.lockbox.domain.model.User;
+import com.lockbox.domain.repository.UserRepository;
+import com.lockbox.domain.service.AuditLogService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;

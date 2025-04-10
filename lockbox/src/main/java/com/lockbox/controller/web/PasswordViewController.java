@@ -1,8 +1,9 @@
 package com.lockbox.controller.web;
 
-import com.lockbox.model.Password;
-import com.lockbox.service.PasswordService;
-import com.lockbox.service.UserService;
+import com.lockbox.domain.model.Password;
+import com.lockbox.domain.service.PasswordService;
+import com.lockbox.domain.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -31,7 +32,7 @@ public class PasswordViewController {
         password.setUser(user);
         model.addAttribute("password", password);
         model.addAttribute("currentUserId", user.getId());
-        return "password/password-form";
+        return "passwords/password-form";
     }
 
     @GetMapping("/edit/{id}")
@@ -51,14 +52,14 @@ public class PasswordViewController {
         
         model.addAttribute("password", password);
         model.addAttribute("currentUserId", authenticatedUser.getId());
-        return "password/password-form";
+        return "passwords/password-form";
     }
 
     @GetMapping
     public String listPasswords(Model model, Authentication authentication) {
         var user = userService.findByUsername(authentication.getName()).orElseThrow();
         model.addAttribute("passwords", passwordService.findByUserId(user.getId()));
-        return "password/password-list";
+        return "passwords/password-list";
     }
 
     @ExceptionHandler(SecurityException.class)

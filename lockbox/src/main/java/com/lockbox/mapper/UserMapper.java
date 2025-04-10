@@ -1,8 +1,9 @@
 package com.lockbox.mapper;
 
+import com.lockbox.domain.model.User;
 import com.lockbox.dto.UserCreationDto;
 import com.lockbox.dto.UserDto;
-import com.lockbox.model.User;
+
 import org.springframework.stereotype.Component;
 
 @Component

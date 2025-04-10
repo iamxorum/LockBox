@@ -1,16 +1,17 @@
 package com.lockbox.controller.v1;
 
 import com.lockbox.controller.BaseController;
+import com.lockbox.domain.model.Category;
+import com.lockbox.domain.model.Password;
+import com.lockbox.domain.model.User;
+import com.lockbox.domain.service.CategoryService;
+import com.lockbox.domain.service.PasswordService;
+import com.lockbox.domain.service.UserService;
 import com.lockbox.dto.ApiResponse;
 import com.lockbox.dto.PasswordCreationDto;
 import com.lockbox.dto.PasswordDto;
 import com.lockbox.mapper.PasswordMapper;
-import com.lockbox.model.Category;
-import com.lockbox.model.Password;
-import com.lockbox.model.User;
-import com.lockbox.service.CategoryService;
-import com.lockbox.service.PasswordService;
-import com.lockbox.service.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

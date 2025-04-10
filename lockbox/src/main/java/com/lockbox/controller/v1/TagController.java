@@ -1,12 +1,13 @@
 package com.lockbox.controller.v1;
 
 import com.lockbox.controller.BaseController;
+import com.lockbox.domain.model.Tag;
+import com.lockbox.domain.service.TagService;
 import com.lockbox.dto.ApiResponse;
 import com.lockbox.dto.TagCreationDto;
 import com.lockbox.dto.TagDto;
 import com.lockbox.mapper.TagMapper;
-import com.lockbox.model.Tag;
-import com.lockbox.service.TagService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

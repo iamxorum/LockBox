@@ -1,9 +1,10 @@
 package com.lockbox.mapper;
 
+import com.lockbox.domain.model.AuditLog;
+import com.lockbox.domain.model.User;
 import com.lockbox.dto.AuditLogCreationDto;
 import com.lockbox.dto.AuditLogDto;
-import com.lockbox.model.AuditLog;
-import com.lockbox.model.User;
+
 import org.springframework.stereotype.Component;
 
 @Component

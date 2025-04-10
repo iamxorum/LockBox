@@ -1,13 +1,14 @@
 package com.lockbox.controller.web;
 
-import com.lockbox.model.AuditLog;
-import com.lockbox.model.Password;
-import com.lockbox.model.SecureNote;
-import com.lockbox.model.User;
-import com.lockbox.service.AuditLogService;
-import com.lockbox.service.PasswordService;
-import com.lockbox.service.SecureNoteService;
-import com.lockbox.service.UserService;
+import com.lockbox.domain.model.AuditLog;
+import com.lockbox.domain.model.Password;
+import com.lockbox.domain.model.SecureNote;
+import com.lockbox.domain.model.User;
+import com.lockbox.domain.service.AuditLogService;
+import com.lockbox.domain.service.PasswordService;
+import com.lockbox.domain.service.SecureNoteService;
+import com.lockbox.domain.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;

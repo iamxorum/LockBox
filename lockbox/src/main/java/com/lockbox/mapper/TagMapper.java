@@ -1,8 +1,9 @@
 package com.lockbox.mapper;
 
+import com.lockbox.domain.model.Tag;
 import com.lockbox.dto.TagCreationDto;
 import com.lockbox.dto.TagDto;
-import com.lockbox.model.Tag;
+
 import org.springframework.stereotype.Component;
 
 @Component

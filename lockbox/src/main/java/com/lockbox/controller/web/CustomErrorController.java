@@ -54,6 +54,6 @@ public class CustomErrorController implements ErrorController {
                 path != null ? path : "unknown", 
                 status != null ? status : "unknown");
         
-        return "error/error";
+        return "errors/error";
     }
 } 

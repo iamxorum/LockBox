@@ -1,10 +1,11 @@
 package com.lockbox.mapper;
 
+import com.lockbox.domain.model.Category;
+import com.lockbox.domain.model.Password;
+import com.lockbox.domain.model.Tag;
 import com.lockbox.dto.PasswordCreationDto;
 import com.lockbox.dto.PasswordDto;
-import com.lockbox.model.Category;
-import com.lockbox.model.Password;
-import com.lockbox.model.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

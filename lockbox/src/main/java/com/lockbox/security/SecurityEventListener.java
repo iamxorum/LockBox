@@ -1,8 +1,9 @@
 package com.lockbox.security;
 
-import com.lockbox.model.User;
-import com.lockbox.repository.UserRepository;
-import com.lockbox.service.AuditLogService;
+import com.lockbox.domain.model.User;
+import com.lockbox.domain.repository.UserRepository;
+import com.lockbox.domain.service.AuditLogService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;

@@ -1,16 +1,17 @@
 package com.lockbox.controller.v1;
 
 import com.lockbox.controller.BaseController;
+import com.lockbox.domain.model.Category;
+import com.lockbox.domain.model.SecureNote;
+import com.lockbox.domain.model.User;
+import com.lockbox.domain.service.CategoryService;
+import com.lockbox.domain.service.SecureNoteService;
+import com.lockbox.domain.service.UserService;
 import com.lockbox.dto.ApiResponse;
 import com.lockbox.dto.SecureNoteCreationDto;
 import com.lockbox.dto.SecureNoteDto;
 import com.lockbox.mapper.SecureNoteMapper;
-import com.lockbox.model.Category;
-import com.lockbox.model.SecureNote;
-import com.lockbox.model.User;
-import com.lockbox.service.CategoryService;
-import com.lockbox.service.SecureNoteService;
-import com.lockbox.service.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

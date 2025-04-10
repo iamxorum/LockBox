@@ -1,8 +1,9 @@
 package com.lockbox.mapper;
 
+import com.lockbox.domain.model.LoginAttempt;
 import com.lockbox.dto.LoginAttemptCreationDto;
 import com.lockbox.dto.LoginAttemptDto;
-import com.lockbox.model.LoginAttempt;
+
 import org.springframework.stereotype.Component;
 
 @Component

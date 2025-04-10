@@ -1,12 +1,13 @@
 package com.lockbox.controller.v1;
 
 import com.lockbox.controller.BaseController;
+import com.lockbox.domain.model.User;
+import com.lockbox.domain.service.UserService;
 import com.lockbox.dto.ApiResponse;
 import com.lockbox.dto.UserCreationDto;
 import com.lockbox.dto.UserDto;
 import com.lockbox.mapper.UserMapper;
-import com.lockbox.model.User;
-import com.lockbox.service.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
