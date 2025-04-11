@@ -1,6 +1,10 @@
 package com.lockbox.domain.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,17 +28,25 @@ public class Password {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @NotBlank(message = "Title is required")
+    @Size(min = 1, max = 100, message = "Title must be between 1 and 100 characters")
     @Column(nullable = false)
     private String title;
     
+    @NotBlank(message = "Username is required")
+    @Size(min = 1, max = 100, message = "Username must be between 1 and 100 characters")
     @Column(nullable = false)
     private String username;
     
+    @NotBlank(message = "Password is required")
+    @Size(min = 1, max = 255, message = "Password must be between 1 and 255 characters")
     @Column(nullable = false)
     private String passwordValue;
     
+    @Pattern(regexp = "^$|^(http|https)://.*$", message = "URL must be valid and start with http:// or https://")
     private String url;
     
+    @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
     private String notes;
     
     @Column(nullable = false)
@@ -42,6 +54,7 @@ public class Password {
     
     private LocalDateTime updatedAt;
     
+    @NotNull(message = "User is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
