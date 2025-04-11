@@ -1,0 +1,307 @@
+/* LockBox Neo Modern UI - Advanced Animations */
+
+/* Floating Animation for Elements */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Subtle Bounce Effect */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.bounce {
+  animation: bounce 2s ease infinite;
+}
+
+/* Graceful Fade-in For Page Elements */
+@keyframes gracefulFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-graceful {
+  opacity: 0;
+  animation: gracefulFade 1.5s ease forwards;
+}
+
+/* Subtle Text Gradient */
+.text-gradient {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Glowing Effect for Highlights */
+@keyframes glow {
+  0% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+  100% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3); }
+}
+
+.glow {
+  animation: glow 3s infinite;
+}
+
+/* Typing animation for text */
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: var(--primary); }
+}
+
+.typing {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: .15em solid var(--primary);
+  display: inline-block;
+  max-width: 100%;
+  width: 100%; /* Default to full width */
+  animation: 
+    typing 1.5s steps(20, end) forwards,
+    blink-caret .75s step-end infinite;
+}
+
+/* Only apply typing animation when explicitly enabled */
+html.animations-enabled .typing {
+  width: 0; /* Start from 0 width only when animations are enabled */
+}
+
+/* Subtle background effects */
+.gradient-shift {
+  background: linear-gradient(
+    -45deg, 
+    rgba(139, 92, 246, 0.1), 
+    rgba(139, 92, 246, 0.05),
+    rgba(124, 58, 237, 0.1), 
+    rgba(139, 92, 246, 0.05)
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Button shine effect */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(25deg);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.btn-shine:hover::after {
+  left: 100%;
+  opacity: 1;
+  transition: all 0.5s ease;
+}
+
+/* Heartbeat effect */
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.1); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.1); }
+  70% { transform: scale(1); }
+}
+
+.heartbeat {
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+/* Background subtle movement */
+@keyframes subtle-wave {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-5px) translateX(5px); }
+  50% { transform: translateY(0) translateX(10px); }
+  75% { transform: translateY(5px) translateX(5px); }
+}
+
+.subtle-wave {
+  animation: subtle-wave 15s ease-in-out infinite;
+}
+
+/* Focus highlight effect for form elements */
+.focus-highlight {
+  transition: all 0.3s;
+}
+
+.focus-highlight:focus {
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Appear animations with different directions */
+@keyframes appear-from-bottom {
+  from { 
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes appear-from-left {
+  from { 
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes appear-from-right {
+  from { 
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.appear-bottom {
+  animation: appear-from-bottom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.appear-left {
+  animation: appear-from-left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.appear-right {
+  animation: appear-from-right 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Longer animation delays */
+.delay-6 { animation-delay: 0.6s; }
+.delay-7 { animation-delay: 0.7s; }
+.delay-8 { animation-delay: 0.8s; }
+.delay-9 { animation-delay: 0.9s; }
+.delay-10 { animation-delay: 1s; }
+.delay-15 { animation-delay: 1.5s; }
+.delay-20 { animation-delay: 2s; }
+
+/* Hover scale effect */
+.hover-scale {
+  transition: transform 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Fade in out animation for background elements */
+@keyframes fade-in-out {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+.fade-in-out {
+  animation: fade-in-out 8s infinite;
+}
+
+/* SVG line drawing animation */
+.svg-draw path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: svg-draw 2s ease forwards;
+}
+
+@keyframes svg-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Spotlight effect */
+.spotlight-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.spotlight-bg::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at center, 
+    rgba(139, 92, 246, 0.1) 0%,
+    rgba(139, 92, 246, 0) 50%
+  );
+  opacity: 0;
+  transition: opacity 1s ease;
+  pointer-events: none;
+}
+
+.spotlight-bg:hover::before {
+  opacity: 1;
+}
+
+/* Color theme transition */
+.theme-transition {
+  transition: background-color 1s ease, color 1s ease, border-color 1s ease;
+}
+
+/* Rotate animation for theme toggle */
+@keyframes rotate-animation {
+  0% { 
+    transform: rotate(0deg); 
+  }
+  100% { 
+    transform: rotate(360deg); 
+  }
+}
+
+.rotate {
+  animation: rotate-animation 0.5s ease-in-out;
+} 

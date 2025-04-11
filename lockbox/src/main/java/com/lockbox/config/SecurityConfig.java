@@ -54,6 +54,10 @@ public class SecurityConfig {
         
         // Permit H2 Console and Swagger UI
         http.authorizeHttpRequests(auth -> auth
+            // Static resources permissions
+            .requestMatchers(new AntPathRequestMatcher("/css/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/js/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
@@ -102,6 +106,10 @@ public class SecurityConfig {
                 .ignoringRequestMatchers(new AntPathRequestMatcher("/api/**")));
                 
         http.authorizeHttpRequests(auth -> auth
+            // Static resources permissions
+            .requestMatchers(new AntPathRequestMatcher("/css/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/js/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()

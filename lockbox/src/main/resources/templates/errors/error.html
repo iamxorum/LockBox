@@ -4,154 +4,290 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error - LockBox</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="icon" type="image/png" href="/images/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/animations.css">
     <style>
-        :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --success: #10b981;
-            --success-dark: #0e9f6e;
-            --danger: #ef4444;
-            --danger-dark: #dc2626;
-            --warning: #f59e0b;
-            --info: #3b82f6;
-            --info-dark: #2563eb;
-            --light: #f9fafb;
-            --dark: #1f2937;
-            --gray: #6b7280;
-            --surface: #ffffff;
-            --border: #e5e7eb;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #4361ee 0%, #3730a3 100%);
-            margin: 0;
-            padding: 0;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            color: var(--dark);
+            justify-content: center;
+            background-color: #101827;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .bg-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        .bg-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            z-index: -2;
+        }
+        
+        .bg-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            z-index: -1;
         }
         
         .error-container {
-            background-color: white;
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-            width: 500px;
+            width: 90%;
+            max-width: 560px;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .error-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
             text-align: center;
         }
         
-        h1 {
+        .error-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--danger);
+            z-index: 2;
+        }
+        
+        .error-icon {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
             color: var(--danger);
-            margin-top: 0;
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
+            position: relative;
+            animation: shake 0.6s ease 1s both;
+        }
+        
+        .error-icon::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(244, 63, 94, 0.15);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .error-icon svg {
+            width: 50px;
+            height: 50px;
+            fill: none;
+            stroke: var(--danger);
+            z-index: 1;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+            animation: slideUp 0.6s ease-out 0.2s both;
         }
         
         .error-code {
             font-size: 5rem;
             font-weight: 800;
-            color: var(--danger);
-            margin: 1rem 0;
             line-height: 1;
+            background: linear-gradient(135deg, var(--danger) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 1.5rem 0;
+            animation: fadeIn 0.6s ease 0.4s both;
+            position: relative;
+        }
+        
+        .error-code::after {
+            content: attr(data-text);
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: transparent;
+            -webkit-text-stroke: 2px rgba(0, 0, 0, 0.05);
+            z-index: -1;
+            font-size: 6rem;
         }
         
         .error-message {
-            color: var(--gray);
+            font-size: 1.25rem;
+            color: var(--gray-dark);
             margin-bottom: 2rem;
-            font-size: 1.1rem;
+            animation: slideUp 0.6s ease 0.6s both;
         }
         
         .error-description {
-            background-color: var(--light);
+            background: rgba(244, 63, 94, 0.05);
+            border-radius: 12px;
             padding: 1.5rem;
-            border-radius: 8px;
+            color: var(--gray-dark);
             text-align: left;
             margin: 1.5rem 0;
+            animation: slideUp 0.6s ease 0.8s both;
+            border-left: 4px solid var(--danger);
         }
         
         .error-details {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+            color: var(--gray-dark);
+            font-size: 0.875rem;
             text-align: left;
-            margin-top: 2rem;
-            font-family: monospace;
-            word-break: break-all;
+            white-space: pre-wrap;
             max-height: 200px;
             overflow-y: auto;
-            font-size: 0.875rem;
+            margin-top: 2rem;
+            animation: slideUp 0.6s ease 1s both;
         }
         
-        .button {
+        .home-button {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background-color: var(--primary);
+            gap: 0.75rem;
+            background: var(--primary-gradient);
             color: white;
-            text-decoration: none;
-            padding: 0.875rem 1.5rem;
-            border-radius: 8px;
+            border: none;
+            padding: 0.875rem 2rem;
+            font-size: 1rem;
             font-weight: 600;
-            transition: all 0.2s;
-            gap: 0.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -5px rgba(93, 95, 239, 0.4);
+            animation: slideUp 0.6s ease 1.2s both;
+            position: relative;
+            overflow: hidden;
         }
         
-        .button:hover {
-            background-color: var(--primary-dark);
+        .home-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(67, 97, 238, 0.2);
+            box-shadow: 0 15px 25px -5px rgba(93, 95, 239, 0.5);
         }
         
-        .icon {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+        .home-button:active {
+            transform: translateY(0);
+        }
+        
+        .home-button span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        @media (max-width: 576px) {
+            .error-container {
+                width: 95%;
+                padding: 1rem;
+            }
+            
+            .error-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .error-code::after {
+                font-size: 5rem;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="bg-animation">
+        <div class="bg-gradient"></div>
+        <div class="bg-grid"></div>
+    </div>
+    
     <div class="error-container">
-        <div class="icon">❌</div>
-        <h1>Oops! Something went wrong</h1>
-        
-        <div class="error-code" th:text="${status}">404</div>
-        
-        <div class="error-message" th:text="${error}">Not Found</div>
-        
-        <div class="error-description" th:if="${status == 404}">
-            <p>The page you're looking for doesn't exist or has been moved.</p>
-            <p>Please check the URL or navigate back to a working page.</p>
-        </div>
-        
-        <div class="error-description" th:if="${status == 403}">
-            <p>You don't have permission to access this resource.</p>
-            <p>Please check your credentials or contact your administrator.</p>
-        </div>
-        
-        <div class="error-description" th:if="${status == 500}">
-            <p>We're experiencing some internal server problems.</p>
-            <p>Please try again later or contact support if the issue persists.</p>
-        </div>
-        
-        <a href="/dashboard" class="button">
-            <span>🏠</span>
-            <span>Go to Dashboard</span>
-        </a>
-        
-        <div class="error-details" th:if="${trace}">
-            <h3>Technical Details:</h3>
-            <p th:text="${trace}"></p>
+        <div class="error-card">
+            <div class="error-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            
+            <h1>Oops! Something went wrong</h1>
+            
+            <div class="error-code" th:text="${status}" data-text="404">404</div>
+            
+            <div class="error-message" th:text="${error}">Not Found</div>
+            
+            <div class="error-description" th:if="${status == 404}">
+                <p>The page you're looking for doesn't exist or has been moved.</p>
+                <p>Please check the URL or navigate back to a working page.</p>
+            </div>
+            
+            <div class="error-description" th:if="${status == 403}">
+                <p>You don't have permission to access this resource.</p>
+                <p>Please check your credentials or contact your administrator.</p>
+            </div>
+            
+            <div class="error-description" th:if="${status == 500}">
+                <p>We're experiencing some internal server problems.</p>
+                <p>Please try again later or contact support if the issue persists.</p>
+            </div>
+            
+            <a href="/dashboard" class="home-button btn-shine">
+                <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </span>
+                <span>Back to Dashboard</span>
+            </a>
+            
+            <div class="error-details" th:if="${trace}">
+                <h3>Technical Details:</h3>
+                <p th:text="${trace}"></p>
+            </div>
         </div>
     </div>
+    
+    <script src="/js/app.js"></script>
 </body>
 </html> 
