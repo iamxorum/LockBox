@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" data-theme="auto">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,50 +9,85 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/login.css}">
     <link rel="stylesheet" th:href="@{/css/animations.css}">
+    <script>
+        // Only using minimal inline script to handle theme preference - doesn't affect form rendering
+        (function() {
+            var savedTheme = localStorage.getItem('theme');
+            var systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } else if (systemPrefersDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
 </head>
-<body class="preload">
+<body>
     <!-- Minimal Background Elements -->
-    <div class="bg-pattern subtle-wave"></div>
-    <div class="bg-gradients gradient-shift"></div>
+    <div class="bg-pattern"></div>
+    <div class="bg-gradients"></div>
     
     <!-- Theme Toggle -->
-    <div class="theme-toggle fade-graceful delay-20">
-        <button id="theme-switch" aria-label="Toggle dark/light mode">
-            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="5"></circle>
-                <line x1="12" y1="1" x2="12" y2="3"></line>
-                <line x1="12" y1="21" x2="12" y2="23"></line>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                <line x1="1" y1="12" x2="3" y2="12"></line>
-                <line x1="21" y1="12" x2="23" y2="12"></line>
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    <div class="theme-toggle">
+        <form method="get">
+            <button type="button" id="theme-switch" aria-label="Toggle dark/light mode" onclick="var theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('theme', theme); return false;">
+                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </form>
+    </div>
+    
+    <!-- Status Bar with Clock and Info -->
+    <div class="status-bar">
+        <div class="status-item clock-widget">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
-            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            <span id="digital-clock">00:00:00</span>
+        </div>
+        <div class="status-item date-widget">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
-        </button>
+            <span id="current-date">Loading...</span>
+        </div>
     </div>
     
     <!-- Login Container -->
     <div class="login-container">
-        <div class="card card-hover spotlight-bg">
+        <div class="card spotlight-bg">
             <div class="card-content">
                 <!-- Logo -->
                 <div class="logo-section">
-                    <div class="logo float">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-draw">
+                    <div class="logo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                         </svg>
                     </div>
-                    <h1><span class="typing">Welcome Back</span></h1>
-                    <p class="text-muted fade-graceful delay-6">Sign in to manage your passwords</p>
+                    <h1 id="greeting">Welcome Back</h1>
+                    <p class="text-muted">Sign in to manage your passwords</p>
                 </div>
 
                 <!-- Alert Messages -->
-                <div th:if="${param.error}" class="alert alert-danger appear-bottom">
+                <div th:if="${param.error}" class="alert alert-danger">
                     <div class="alert-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -63,7 +98,7 @@
                     <span>Invalid username or password</span>
                 </div>
                 
-                <div th:if="${param.logout}" class="alert alert-success appear-bottom">
+                <div th:if="${param.logout}" class="alert alert-success">
                     <div class="alert-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -75,27 +110,27 @@
                 
                 <!-- Login Form -->
                 <form th:action="@{/login}" method="post" class="login-form">
-                    <div class="form-group appear-left delay-7">
+                    <div class="form-group">
                         <input type="text" id="username" name="username" class="form-control focus-highlight" placeholder=" " required autocomplete="username">
                         <label for="username" class="form-label">Username</label>
                     </div>
                     
-                    <div class="form-group appear-left delay-8">
+                    <div class="form-group">
                         <input type="password" id="password" name="password" class="form-control focus-highlight" placeholder=" " required autocomplete="current-password">
                         <label for="password" class="form-label">Password</label>
-                        <div class="password-toggle" tabindex="0" aria-label="Toggle password visibility">
+                        <label class="password-toggle" tabindex="0" aria-label="Show password" onclick="var passwordInput = document.getElementById('password'); passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password'; this.setAttribute('aria-label', passwordInput.type === 'password' ? 'Show password' : 'Hide password');">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
-                        </div>
+                        </label>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary btn-shine appear-bottom delay-9">
+                    <button type="submit" class="btn btn-primary btn-shine">
                         Sign In
                     </button>
                     
-                    <div class="text-center mb-4 mt-4 appear-bottom delay-10">
+                    <div class="text-center mb-4 mt-4">
                         <p class="account-message">Don't have an account? <a href="#" class="contact-link">Contact your administrator</a></p>
                     </div>
                 </form>
@@ -103,14 +138,15 @@
         </div>
         
         <!-- Tech Badge -->
-        <div class="tech-badge fade-graceful delay-15">
+        <div class="tech-badge">
             <span class="badge">
                 <span class="pulse-dot"></span>
                 <span class="text-gradient">Quantum-secure encryption</span>
             </span>
         </div>
     </div>
-
+    
+    <!-- Load minimal JS for background effects only -->
     <script th:src="@{/js/login.js}"></script>
 </body>
 </html> 

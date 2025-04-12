@@ -7,7 +7,6 @@ import com.lockbox.domain.model.User;
 import com.lockbox.domain.service.AuditLogService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
