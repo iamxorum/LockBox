@@ -54,4 +54,14 @@ public class TagServiceImpl implements TagService {
     public boolean existsByName(String name) {
         return tagRepository.existsByName(name);
     }
+    
+    @Override
+    public boolean existsByNameAndUserId(String name, Long userId) {
+        return tagRepository.existsByNameAndUserId(name, userId);
+    }
+    
+    @Override
+    public List<Tag> findByUserId(Long userId) {
+        return tagRepository.findByUserId(userId);
+    }
 } 

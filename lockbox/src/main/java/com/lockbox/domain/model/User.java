@@ -44,6 +44,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AuditLog> auditLogs = new HashSet<>();
     
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Tag> tags = new HashSet<>();
+    
     /**
      * Custom toString implementation to avoid lazy loading issues
      */

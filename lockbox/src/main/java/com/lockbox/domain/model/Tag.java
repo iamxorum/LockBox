@@ -18,7 +18,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"passwords", "secureNotes"})
+@ToString(exclude = {"passwords", "secureNotes", "user"})
 public class Tag {
     
     @Id
@@ -32,6 +32,10 @@ public class Tag {
     private LocalDateTime createdAt;
     
     private LocalDateTime updatedAt;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
     
     @ManyToMany(mappedBy = "tags")
     private Set<Password> passwords = new HashSet<>();

@@ -13,6 +13,7 @@ public class TagDto {
     
     private Long id;
     private String name;
+    private Long userId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 } 
