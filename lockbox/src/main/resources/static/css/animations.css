@@ -59,8 +59,13 @@
 }
 
 @keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: var(--primary); }
+  from, to { border-right-color: transparent }
+  50% { border-right-color: var(--primary); }
+}
+
+@keyframes hide-cursor {
+  from { border-right-color: var(--primary); }
+  to { border-right-color: transparent; }
 }
 
 .typing {
@@ -70,9 +75,12 @@
   display: inline-block;
   max-width: 100%;
   width: 100%; /* Default to full width */
+  box-sizing: border-box;
+  position: relative;
   animation: 
     typing 1.5s steps(20, end) forwards,
-    blink-caret .75s step-end infinite;
+    blink-caret .75s step-end infinite 0s,
+    hide-cursor 0.1s ease-in-out forwards 3s;
 }
 
 /* Only apply typing animation when explicitly enabled */
