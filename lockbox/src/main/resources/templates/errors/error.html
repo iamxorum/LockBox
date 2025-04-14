@@ -10,35 +10,6 @@
     <link rel="stylesheet" th:href="@{/css/lockbox-common.css}">
     <link rel="stylesheet" th:href="@{/css/lockbox-animations.css}">
     <link rel="stylesheet" th:href="@{/css/lockbox-error.css}">
-    <style>
-        @media (max-width: 576px) {
-            .error-container {
-                width: 95%;
-                padding: 0;
-            }
-            
-            .error-card {
-                padding: 1.5rem 1rem;
-            }
-            
-            .error-code {
-                font-size: 4rem;
-            }
-            
-            .error-code::after {
-                font-size: 4.5rem;
-            }
-            
-            .error-message {
-                font-size: 1rem;
-            }
-            
-            .home-button {
-                width: 100%;
-                margin-top: 1rem;
-            }
-        }
-    </style>
     <script>
         // Check for saved theme preference or use the system preference
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
