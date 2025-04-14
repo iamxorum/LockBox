@@ -1,0 +1,240 @@
+/* LockBox Sidebar Styles */
+
+/* Sidebar */
+.sidebar {
+  width: 280px;
+  background-color: var(--bg-card);
+  border-right: 1px solid var(--border);
+  color: var(--text-primary);
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  box-shadow: var(--shadow);
+}
+
+/* Logo container to group icon and text */
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 0 5px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+  border-radius: var(--radius);
+  color: #1a202c;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.logo-icon svg {
+  width: 22px;
+  height: 22px;
+  position: relative;
+  z-index: 2;
+  stroke: #1a202c;
+}
+
+.logo-icon:after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: inherit;
+  border-radius: inherit;
+  filter: blur(6px);
+  opacity: 0.3;
+  z-index: 0;
+}
+
+/* Logo text container */
+.logo-text {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.text-gradient {
+  background-image: linear-gradient(90deg, #f6d365 0%, #fda085 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+  font-weight: bold;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+  overflow: visible;
+  padding: 0 2px;
+}
+
+[data-theme="dark"] .text-gradient {
+  background-image: linear-gradient(90deg, #f6d365 0%, #fda085 100%);
+}
+
+.nav-menu {
+  list-style: none;
+  flex: 1;
+  padding: 1.25rem 0;
+  overflow-y: auto;
+}
+
+.nav-item {
+  margin: 0.25rem 0.75rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  border-radius: var(--radius);
+  font-weight: 500;
+  transition: all 0.2s;
+  gap: 0.75rem;
+}
+
+.nav-link svg {
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: var(--primary);
+}
+
+.nav-link:hover svg, .nav-link.active svg {
+  color: var(--primary);
+}
+
+.nav-link.logout {
+  color: var(--text-secondary);
+}
+
+.nav-link.logout svg {
+  color: var(--text-secondary);
+}
+
+.nav-link.logout:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+}
+
+.nav-link.logout:hover svg {
+  color: var(--error);
+}
+
+.logout-container {
+  margin-top: auto;
+  padding: 1rem 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  margin-left: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.theme-toggle button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #8b5cf6, #7c3aed);
+  color: white;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.theme-toggle button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle button:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Theme Icons */
+.sun-icon,
+.moon-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease, transform 0.5s ease;
+}
+
+html[data-theme='light'] .sun-icon {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+html[data-theme='light'] .moon-icon {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+}
+
+html[data-theme='dark'] .sun-icon {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+}
+
+html[data-theme='dark'] .moon-icon {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+@media (max-width: 992px) {
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .sidebar:focus-within {
+    transform: translateX(0);
+  }
+} 

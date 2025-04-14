@@ -541,60 +541,6 @@
     }
   }
   
-  /* Animations */
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  @keyframes fade-up {
-    from { 
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to { 
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes scale-in {
-    from { 
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to { 
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-  
-  @keyframes pulse-animation {
-    0% {
-      transform: scale(1);
-      opacity: 0.8;
-    }
-    50% {
-      transform: scale(2);
-      opacity: 0;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 0;
-    }
-  }
-  
-  /* Animation Classes */
-  .fade-in { animation: fade-in 0.5s ease forwards; }
-  .fade-up { animation: fade-up 0.5s ease forwards; }
-  .scale-in { animation: scale-in 0.5s var(--transition-bounce) forwards; }
-  
-  .delay-1 { animation-delay: 0.1s; }
-  .delay-2 { animation-delay: 0.2s; }
-  .delay-3 { animation-delay: 0.3s; }
-  .delay-4 { animation-delay: 0.4s; }
-  .delay-5 { animation-delay: 0.5s; }
-  
   /* Theme Toggle Button */
   .theme-toggle {
     position: absolute;
@@ -736,78 +682,6 @@
     animation-name: none !important;
   }
   
-  /* Animation handling on page load */
-  html:not(.animations-enabled) .fade-in,
-  html:not(.animations-enabled) .fade-up,
-  html:not(.animations-enabled) .scale-in,
-  html:not(.animations-enabled) .fade-graceful,
-  html:not(.animations-enabled) .appear-bottom,
-  html:not(.animations-enabled) .appear-left,
-  html:not(.animations-enabled) .appear-right,
-  html:not(.animations-enabled) .typing {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    width: auto !important;
-  }
-  
-  /* Initial page load fix */
-  body {
-    opacity: 1;
-    transition: opacity 0.3s ease;
-  }
-  
-  /* Card always visible at first */
-  .card {
-    opacity: 1;
-  }
-  
-  /* Ensure animations start from the correct state when enabled */
-  html.animations-enabled .fade-in, 
-  html.animations-enabled .fade-up,
-  html.animations-enabled .fade-graceful,
-  html.animations-enabled .appear-bottom,
-  html.animations-enabled .appear-left,
-  html.animations-enabled .appear-right {
-    opacity: 0;
-  }
-  
-  html.animations-enabled .scale-in {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  
-  html.animations-enabled .fade-up {
-    transform: translateY(10px);
-  }
-  
-  html.animations-enabled .appear-bottom {
-    transform: translateY(10px);
-  }
-  
-  html.animations-enabled .appear-left {
-    transform: translateX(-10px);
-  }
-  
-  html.animations-enabled .appear-right {
-    transform: translateX(10px);
-  }
-  
-  html.animations-enabled .typing {
-    width: 0;
-  }
-  
-  /* Preload class to prevent animation flashes */
-  .preload * {
-    transition: none !important;
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    width: auto !important;
-  }
-  
-  /* Add styles at the end of the file to ensure the page looks good without JavaScript */
-  
   /* Ensure the form is always visible without JavaScript */
   .form-group,
   .form-control,
@@ -843,46 +717,6 @@
     padding: 0 0.25rem;
     background-color: var(--bg-card);
     z-index: 3;
-  }
-  
-  /* Static animations replacement */
-  .logo svg {
-    color: var(--primary);
-    transition: transform 0.5s ease;
-  }
-  
-  .logo:hover svg {
-    transform: scale(1.1);
-  }
-  
-  .card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-  }
-  
-  /* Ensure password toggle is clickable without JS */
-  .password-toggle {
-    cursor: pointer;
-  }
-  
-  /* Theme toggle improvements */
-  #theme-switch {
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  #theme-switch:hover {
-    transform: translateY(-2px);
-  }
-  
-  /* Make sure the form is never hidden */
-  .preload * {
-    transition: none !important;
-    animation: none !important;
   }
   
   /* Light flare effects for both light and dark modes */
