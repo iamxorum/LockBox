@@ -1,7 +1,7 @@
 /* LockBox Sidebar Styles */
 
-/* Sidebar */
-.sidebar {
+/* Sidebar as an aside element */
+aside.sidebar {
   width: 280px;
   background-color: var(--bg-card);
   border-right: 1px solid var(--border);
@@ -14,6 +14,23 @@
   flex-direction: column;
   z-index: 10;
   box-shadow: var(--shadow);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Layout container to wrap sidebar and main content */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Main content area positioned to the right of sidebar */
+.main-content-wrapper {
+  flex: 1;
+  margin-left: 280px; /* Match the sidebar width */
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+  padding: 1rem;
+  position: relative;
 }
 
 /* Logo container to group icon and text */
@@ -228,13 +245,70 @@ html[data-theme='dark'] .moon-icon {
   transform: translate(-50%, -50%) scale(1);
 }
 
+/* Sidebar toggle button for mobile */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: white;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+/* Responsive adjustments */
 @media (max-width: 992px) {
-  .sidebar {
+  aside.sidebar {
     transform: translateX(-100%);
     box-shadow: var(--shadow-lg);
+    transition: transform 0.3s ease-in-out;
   }
   
-  .sidebar:focus-within {
+  aside.sidebar.active {
     transform: translateX(0);
+  }
+  
+  .sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .main-content-wrapper {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 5;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+  }
+  
+  body.sidebar-open::after {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+@media (max-width: 576px) {
+  aside.sidebar {
+    width: 240px;
+  }
+  
+  .main-content-wrapper {
+    padding: 0.5rem;
   }
 } 

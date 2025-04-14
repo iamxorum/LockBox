@@ -2,8 +2,8 @@
 
 /* Form container */
 .container {
-  max-width: 120rem;
-  margin: 3rem auto;
+  max-width: 95%;
+  margin: 2rem auto;
   background-color: var(--bg-card);
   padding: 2rem;
   border-radius: var(--radius-lg);
@@ -22,9 +22,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 h1 {
@@ -48,6 +50,8 @@ form {
   margin-top: 1rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 /* Password-specific styles */
@@ -55,6 +59,7 @@ form {
   display: flex;
   gap: 1rem;
   margin-top: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .strength-meter {
@@ -84,6 +89,7 @@ form {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 /* Tag input system */
@@ -101,6 +107,7 @@ form {
   font-size: 1rem;
   color: var(--text-primary);
   background-color: var(--bg-input);
+  width: 100%;
 }
 
 .selected-tags {
@@ -229,6 +236,7 @@ form {
   gap: 1rem;
   padding: 1.5rem;
   border-top: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 
 .modal.show {
@@ -236,9 +244,19 @@ form {
 }
 
 /* Responsive adjustments for forms */
+@media (max-width: 992px) {
+  .container {
+    margin: 1.5rem auto;
+    padding: 1.5rem;
+    max-width: 90%;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
-    padding: 1.5rem;
+    margin: 1rem auto;
+    padding: 1rem;
+    max-width: 95%;
   }
   
   .header {
@@ -247,12 +265,76 @@ form {
     gap: 1rem;
   }
   
+  h1 {
+    font-size: 1.5rem;
+  }
+  
   .form-actions {
     flex-direction: column;
     gap: 1rem;
   }
   
+  .form-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
   .password-controls {
     flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .password-controls .btn {
+    width: 100%;
+  }
+  
+  .category-select-container {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .category-select-container select {
+    width: 100%;
+  }
+  
+  .category-select-container .btn {
+    align-self: flex-start;
+  }
+  
+  .modal-content {
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+  }
+  
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding: 0.75rem;
+    margin: 0.5rem auto;
+    border-radius: var(--radius);
+  }
+  
+  h1 {
+    font-size: 1.25rem;
+  }
+  
+  .header {
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  input, textarea, select {
+    padding: 0.75rem 0.75rem;
+    font-size: 0.95rem;
   }
 } 

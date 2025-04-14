@@ -176,11 +176,18 @@
 }
 
 /* Main content */
-.main-content {
+.main-content-wrapper {
   flex: 1;
-  margin-left: 280px;
+  margin-left: 280px; /* Match the sidebar width */
+  min-height: 100vh;
+  transition: margin-left 0.3s ease, width 0.3s ease;
   padding: 2rem;
-  width: calc(100% - 280px);
+}
+
+/* For backward compatibility - this can be removed later */
+.main-content {
+  width: 100%;
+  padding: 0;
 }
 
 /* Page header */
@@ -571,9 +578,10 @@ html[data-theme='dark'] .moon-icon {
     transform: translateX(0);
   }
   
-  .main-content {
+  .main-content-wrapper {
     margin-left: 0;
     width: 100%;
+    padding: 1.5rem;
   }
 }
 
@@ -599,5 +607,11 @@ html[data-theme='dark'] .moon-icon {
   
   .stat-value {
     font-size: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .main-content-wrapper {
+    padding: 1rem;
   }
 }
