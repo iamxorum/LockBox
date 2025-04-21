@@ -60,6 +60,25 @@ public class TagController extends BaseController {
         return ResponseEntity.ok(ApiResponse.success("Tags retrieved successfully", tagDtos));
     }
 
+    @GetMapping("/batch")
+    @Operation(summary = "Get tags by IDs", description = "Retrieves multiple tags by their IDs")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Tags found",
+                    content = @Content(schema = @Schema(implementation = TagDtoListResponse.class)))
+    })
+    public ResponseEntity<ApiResponse<List<TagDto>>> getTagsByIds(@RequestParam List<Long> ids) {
+        User currentUser = getCurrentUser();
+        List<Tag> tags = tagService.findAllById(ids);
+        
+        // Filter out tags that don't belong to the current user
+        List<TagDto> tagDtos = tags.stream()
+                .filter(tag -> tag.getUser().getId().equals(currentUser.getId()))
+                .map(tagMapper::toDto)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(ApiResponse.success("Tags retrieved successfully", tagDtos));
+    }
+
     @PostMapping
     @Operation(summary = "Create tag", description = "Creates a new tag for the authenticated user")
     @ApiResponses(value = {

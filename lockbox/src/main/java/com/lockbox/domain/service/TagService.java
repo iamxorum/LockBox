@@ -11,4 +11,6 @@ public interface TagService extends CrudService<Tag, Long> {
     boolean existsByNameAndUserId(String name, Long userId);
     
     List<Tag> findByUserId(Long userId);
+    
+    List<Tag> findAllById(Iterable<Long> ids);
 } 

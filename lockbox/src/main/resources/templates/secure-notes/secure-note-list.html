@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>LockBox - Secure Notes</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+    <link rel="icon" type="image/png" th:href="@{/images/favicon.png}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/lockbox-common.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-tables.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-animations.css}">
+    <!-- Minimal theme setup script - just to handle user preference -->
+    <script>
+        // Set initial theme based on saved preference or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        } else if (systemPrefersDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+</head>
+<body class="dashboard-body">
+    <div class="sidebar-toggle" id="sidebarToggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </div>
+    
+    <!-- Background elements -->
+    <div class="bg-pattern"></div>
+    <div class="bg-gradients"></div>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <span class="text-gradient">LockBox</span>
+                    </div>
+                    
+                    <!-- Theme Toggle -->
+                    <div class="theme-toggle">
+                        <button type="button" id="theme-switch" aria-label="Toggle dark/light mode" onclick="var theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('theme', theme); return false;">
+                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/passwords" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                        </svg>
+                        <span>Passwords</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/secure-notes" class="nav-link active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span>Secure Notes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/categories" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                        </svg>
+                        <span>Categories</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/settings" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="logout-container">
+                <a href="/logout" class="nav-link logout">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+        
+        <div class="main-content-wrapper">
+            <div class="main-content">
+                <div class="container fade-in">
+                    <div class="header">
+                        <h1><span class="icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </span> Your Secure Notes</h1>
+                        <a href="/secure-notes/new" class="btn btn-shine">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg> 
+                            Add New Note
+                        </a>
+                    </div>
+                    
+                    <div class="filters slide-up">
+                        <div class="filter-group">
+                            <label class="filter-label">Search</label>
+                            <input type="text" id="searchFilter" class="search-input" placeholder="Search notes...">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Category</label>
+                            <select id="categoryFilter" class="filter-select">
+                                <option value="">All Categories</option>
+                                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}">Category Name</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Sort By</label>
+                            <select id="sortFilter" class="filter-select">
+                                <option value="title">Title (A-Z)</option>
+                                <option value="title-desc">Title (Z-A)</option>
+                                <option value="created">Newest First</option>
+                                <option value="created-asc">Oldest First</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group" style="flex: 1;">
+                            <label class="filter-label">Active Filters</label>
+                            <div class="filter-tags" id="activeFilters">
+                                <!-- Tags will be added here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${secureNotes.empty}" class="empty-state slide-up">
+                        <p>You haven't created any secure notes yet. Click "Add New Note" to get started.</p>
+                        <a href="/secure-notes/new" class="btn btn-shine">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Add New Note
+                        </a>
+                    </div>
+                    
+                    <table th:if="${!secureNotes.empty}" class="slide-up">
+                        <thead>
+                            <tr>
+                                <th class="title-header">Title</th>
+                                <th class="category-header">Category</th>
+                                <th class="tags-header">Tags</th>
+                                <th class="created-header">Created</th>
+                                <th class="actions-header">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="note : ${secureNotes}" 
+                                th:attr="data-category=${note.categoryId != null ? note.categoryId : ''}, 
+                                         data-created=${#temporals.format(note.createdAt, 'yyyy-MM-dd HH:mm:ss')}">
+                                <td th:text="${note.title}">Title</td>
+                                <td th:text="${note.categoryName}">Category</td>
+                                <td>
+                                    <div class="tags">
+                                        <span th:if="${note.tags != null and !note.tags.isEmpty()}"
+                                              th:each="tag : ${note.tags}" 
+                                              class="tag" 
+                                              th:text="${tag.name}">Tag</span>
+                                        <span th:if="${note.tags == null or note.tags.isEmpty()}" 
+                                              class="no-tags">No tags</span>
+                                    </div>
+                                </td>
+                                <td th:text="${#temporals.format(note.createdAt, 'yyyy-MM-dd HH:mm')}">Created</td>
+                                <td>
+                                    <div class="actions">
+                                        <a th:href="@{/secure-notes/edit/{id}(id=${note.id})}" 
+                                           class="btn btn-sm btn-primary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                        </a>
+                                        <form th:action="@{/secure-notes/delete/{id}(id=${note.id})}" 
+                                              method="POST" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Are you sure you want to delete this note?');">
+                                            <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchFilter = document.getElementById('searchFilter');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const sortFilter = document.getElementById('sortFilter');
+            const table = document.querySelector('table');
+            const rows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
+            const activeFilters = document.getElementById('activeFilters');
+            
+            function updateFilters() {
+                const searchTerm = searchFilter.value.toLowerCase();
+                const categoryId = categoryFilter.value;
+                const sortBy = sortFilter.value;
+                
+                // Clear active filters
+                activeFilters.innerHTML = '';
+                
+                // Add search filter if present
+                if (searchTerm) {
+                    const searchTag = document.createElement('span');
+                    searchTag.className = 'filter-tag';
+                    searchTag.innerHTML = `Search: ${searchTerm} <button class="remove-filter" data-type="search">×</button>`;
+                    activeFilters.appendChild(searchTag);
+                }
+                
+                // Add category filter if present
+                if (categoryId) {
+                    const categoryName = categoryFilter.options[categoryFilter.selectedIndex].text;
+                    const categoryTag = document.createElement('span');
+                    categoryTag.className = 'filter-tag';
+                    categoryTag.innerHTML = `Category: ${categoryName} <button class="remove-filter" data-type="category">×</button>`;
+                    activeFilters.appendChild(categoryTag);
+                }
+                
+                // Filter rows
+                rows.forEach(row => {
+                    const title = row.cells[0].textContent.toLowerCase();
+                    const content = row.cells[2].textContent.toLowerCase();
+                    const rowCategory = row.getAttribute('data-category');
+                    const matchesSearch = !searchTerm || title.includes(searchTerm) || content.includes(searchTerm);
+                    const matchesCategory = !categoryId || rowCategory === categoryId;
+                    
+                    row.style.display = matchesSearch && matchesCategory ? '' : 'none';
+                });
+                
+                // Sort rows
+                const sortedRows = Array.from(rows).filter(row => row.style.display !== 'none');
+                sortedRows.sort((a, b) => {
+                    const aTitle = a.cells[0].textContent;
+                    const bTitle = b.cells[0].textContent;
+                    const aCreated = a.getAttribute('data-created');
+                    const bCreated = b.getAttribute('data-created');
+                    
+                    switch (sortBy) {
+                        case 'title':
+                            return aTitle.localeCompare(bTitle);
+                        case 'title-desc':
+                            return bTitle.localeCompare(aTitle);
+                        case 'created':
+                            return new Date(bCreated) - new Date(aCreated);
+                        case 'created-asc':
+                            return new Date(aCreated) - new Date(bCreated);
+                        default:
+                            return 0;
+                    }
+                });
+                
+                if (table) {
+                    const tbody = table.querySelector('tbody');
+                    sortedRows.forEach(row => tbody.appendChild(row));
+                }
+            }
+            
+            // Event listeners
+            if (searchFilter) searchFilter.addEventListener('input', updateFilters);
+            if (categoryFilter) categoryFilter.addEventListener('change', updateFilters);
+            if (sortFilter) sortFilter.addEventListener('change', updateFilters);
+            
+            // Handle filter removal
+            if (activeFilters) {
+                activeFilters.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('remove-filter')) {
+                        const type = e.target.getAttribute('data-type');
+                        if (type === 'search') {
+                            searchFilter.value = '';
+                        } else if (type === 'category') {
+                            categoryFilter.value = '';
+                        }
+                        updateFilters();
+                    }
+                });
+            }
+            
+            // Initial filter update
+            if (table) updateFilters();
+        });
+    </script>
+</body>
+</html> 

@@ -3,22 +3,30 @@ package com.lockbox.mapper;
 import com.lockbox.domain.model.Category;
 import com.lockbox.domain.model.Password;
 import com.lockbox.domain.model.Tag;
+import com.lockbox.domain.service.CategoryService;
+import com.lockbox.domain.service.TagService;
 import com.lockbox.dto.PasswordCreationDto;
 import com.lockbox.dto.PasswordDto;
+import com.lockbox.dto.TagDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 public class PasswordMapper {
     
     private final TagMapper tagMapper;
+    private final CategoryService categoryService;
+    private final TagService tagService;
     
     @Autowired
-    public PasswordMapper(TagMapper tagMapper) {
+    public PasswordMapper(TagMapper tagMapper, CategoryService categoryService, TagService tagService) {
         this.tagMapper = tagMapper;
+        this.categoryService = categoryService;
+        this.tagService = tagService;
     }
     
     public PasswordDto toDto(Password password) {
@@ -38,24 +46,18 @@ public class PasswordMapper {
         
         if (password.getCategory() != null) {
             dto.setCategoryId(password.getCategory().getId());
-            
-            // Safer way to access category name - avoid LazyInitializationException
-            try {
-                dto.setCategoryName(password.getCategory().getName());
-            } catch (Exception e) {
-                // If we can't access the name due to lazy loading, just set it to null
-                dto.setCategoryName(null);
-            }
+            dto.setCategoryName(password.getCategory().getName());
         }
         
-        if (password.getTags() != null && !password.getTags().isEmpty()) {
-            try {
-                dto.setTags(password.getTags().stream()
-                        .map(tagMapper::toDto)
-                        .collect(Collectors.toSet()));
-            } catch (Exception e) {
-                // If we can't access tags due to lazy loading, leave as null
-            }
+        if (password.getTags() != null) {
+            dto.setTags(password.getTags().stream()
+                    .map(tag -> {
+                        TagDto tagDto = new TagDto();
+                        tagDto.setId(tag.getId());
+                        tagDto.setName(tag.getName());
+                        return tagDto;
+                    })
+                    .collect(Collectors.toSet()));
         }
         
         return dto;
@@ -69,10 +71,24 @@ public class PasswordMapper {
         Password password = new Password();
         password.setTitle(dto.getTitle());
         password.setUsername(dto.getUsername());
-        password.setPasswordValue(dto.getPasswordValue());
-        password.setUrl(dto.getUrl());
+        password.setPasswordValue(dto.getPassword());
+        password.setUrl(dto.getWebsiteUrl());
         password.setNotes(dto.getNotes());
         
+        if (dto.getCategoryId() != null) {
+            Category category = categoryService.findById(dto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with ID: " + dto.getCategoryId()));
+            password.setCategory(category);
+        }
+
+        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
+            Set<Tag> tags = dto.getTagIds().stream()
+                .map(tagId -> tagService.findById(tagId)
+                    .orElseThrow(() -> new IllegalArgumentException("Tag not found with ID: " + tagId)))
+                .collect(Collectors.toSet());
+            password.setTags(tags);
+        }
+
         return password;
     }
     
@@ -89,12 +105,12 @@ public class PasswordMapper {
             password.setUsername(dto.getUsername());
         }
         
-        if (dto.getPasswordValue() != null) {
-            password.setPasswordValue(dto.getPasswordValue());
+        if (dto.getPassword() != null) {
+            password.setPasswordValue(dto.getPassword());
         }
         
-        if (dto.getUrl() != null) {
-            password.setUrl(dto.getUrl());
+        if (dto.getWebsiteUrl() != null) {
+            password.setUrl(dto.getWebsiteUrl());
         }
         
         if (dto.getNotes() != null) {

@@ -12,11 +12,11 @@ INSERT INTO categories (name, description, user_id, created_at) VALUES
 ('Financial', 'Banking and financial accounts', 3, CURRENT_TIMESTAMP);
 
 -- Insert tags
-INSERT INTO tags (name, created_at) VALUES
-('Important', CURRENT_TIMESTAMP),
-('Favorite', CURRENT_TIMESTAMP),
-('Sensitive', CURRENT_TIMESTAMP),
-('Archived', CURRENT_TIMESTAMP);
+INSERT INTO tags (name, created_at, user_id) VALUES
+('Important', CURRENT_TIMESTAMP, 2),
+('Favorite', CURRENT_TIMESTAMP, 2),
+('Sensitive', CURRENT_TIMESTAMP, 3),
+('Archived', CURRENT_TIMESTAMP, 2);
 
 -- Insert passwords
 INSERT INTO passwords (title, username, password_value, url, notes, user_id, category_id, created_at) VALUES
