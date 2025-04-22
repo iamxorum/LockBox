@@ -6,56 +6,59 @@ import com.lockbox.domain.service.CategoryService;
 import com.lockbox.domain.service.UserService;
 import com.lockbox.dto.CategoryCreationDto;
 import com.lockbox.mapper.CategoryMapper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/categories")
 public class CategoryViewController {
-    private static final Logger logger = LoggerFactory.getLogger(CategoryViewController.class);
-    
+
     private final CategoryService categoryService;
     private final UserService userService;
     private final CategoryMapper categoryMapper;
 
-    public CategoryViewController(CategoryService categoryService,
-                                UserService userService,
-                                CategoryMapper categoryMapper) {
+    @Autowired
+    public CategoryViewController(CategoryService categoryService, UserService userService, CategoryMapper categoryMapper) {
         this.categoryService = categoryService;
         this.userService = userService;
         this.categoryMapper = categoryMapper;
     }
 
     @PostMapping
-    @ResponseBody
-    public ResponseEntity<?> createCategory(@RequestBody CategoryCreationDto categoryCreationDto,
-                                          Authentication authentication) {
+    public String createCategory(@ModelAttribute CategoryCreationDto categoryCreationDto, 
+                               RedirectAttributes redirectAttributes,
+                               HttpServletRequest request) {
         try {
-            User user = userService.findByUsername(authentication.getName())
-                    .orElseThrow(() -> new SecurityException("User not found"));
+            User user = userService.findById(categoryCreationDto.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // Check if category with same name exists
             if (categoryService.existsByUserIdAndName(user.getId(), categoryCreationDto.getName())) {
-                return ResponseEntity.badRequest()
-                    .body("A category with this name already exists");
+                redirectAttributes.addFlashAttribute("error", "A category with this name already exists");
+                return getRedirectUrl(request);
             }
 
-            // Create and save the category
             Category category = categoryMapper.toEntity(categoryCreationDto);
             category.setUser(user);
-            category = categoryService.save(category);
+            categoryService.save(category);
 
-            // Return the created category
-            return ResponseEntity.ok(categoryMapper.toDto(category));
+            redirectAttributes.addFlashAttribute("success", "Category created successfully");
+            return getRedirectUrl(request);
         } catch (Exception e) {
-            logger.error("Error creating category", e);
-            return ResponseEntity.internalServerError()
-                .body("Error creating category: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Failed to create category: " + e.getMessage());
+            return getRedirectUrl(request);
         }
+    }
+
+    private String getRedirectUrl(HttpServletRequest request) {
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty()) {
+            return "redirect:" + referer.substring(referer.indexOf("/", 8));
+        }
+        return "redirect:/";
     }
 } 

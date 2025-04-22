@@ -7,6 +7,8 @@ import com.lockbox.domain.service.AuditLogService;
 import com.lockbox.domain.service.CategoryService;
 import com.lockbox.domain.service.PasswordService;
 import com.lockbox.domain.service.UserService;
+import com.lockbox.dto.PasswordCreationDto;
+import com.lockbox.mapper.PasswordMapper;
 
 import jakarta.validation.Valid;
 
@@ -34,41 +36,43 @@ public class PasswordViewController {
     private final UserService userService;
     private final AuditLogService auditLogService;
     private final CategoryService categoryService;
+    private final PasswordMapper passwordMapper;
 
     @Autowired
-    public PasswordViewController(PasswordService passwordService, UserService userService, AuditLogService auditLogService, CategoryService categoryService) {
+    public PasswordViewController(PasswordService passwordService, UserService userService, 
+                                AuditLogService auditLogService, CategoryService categoryService,
+                                PasswordMapper passwordMapper) {
         this.passwordService = passwordService;
         this.userService = userService;
         this.auditLogService = auditLogService;
         this.categoryService = categoryService;
+        this.passwordMapper = passwordMapper;
     }
 
     @GetMapping("/new")
     public String showCreateForm(Model model, Authentication authentication) {
-        Password password = new Password();
         var user = userService.findByUsername(authentication.getName()).orElseThrow();
         
-        // Set the user directly to ensure proper binding
-        password.setUser(user);
-        
-        // Initialize timestamps to prevent binding errors
-        LocalDateTime now = LocalDateTime.now();
-        password.setCreatedAt(now);
-        password.setUpdatedAt(now);
+        // Create new DTO
+        PasswordCreationDto passwordDto = new PasswordCreationDto();
+        passwordDto.setUserId(user.getId());
         
         // Add categories to the form
         List<Category> categories = categoryService.findByUserId(user.getId());
         model.addAttribute("categories", categories);
         
-        model.addAttribute("password", password);
+        model.addAttribute("password", passwordDto);
         model.addAttribute("currentUserId", user.getId());
         return "passwords/password-form";
     }
 
     @PostMapping("/save")
     @Transactional
-    public String savePassword(@Valid @ModelAttribute Password password, BindingResult bindingResult, 
-                               Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
+    public String savePassword(@Valid @ModelAttribute("password") PasswordCreationDto passwordDto, 
+                             BindingResult bindingResult, 
+                             Authentication authentication, 
+                             Model model, 
+                             RedirectAttributes redirectAttributes) {
         // Get the authenticated user
         User user = userService.findByUsername(authentication.getName()).orElseThrow();
         
@@ -77,23 +81,32 @@ public class PasswordViewController {
         // Return to form with validation errors
         if (bindingResult.hasErrors()) {
             logger.warn("Validation errors occurred: {}", bindingResult.getAllErrors());
+            // Add categories to the form for redisplay
+            List<Category> categories = categoryService.findByUserId(user.getId());
+            model.addAttribute("categories", categories);
             return "passwords/password-form";
         }
         
         try {
-            if (password.getUser() == null) {
-                password.setUser(user);
-            }
+            // Set the user ID
+            passwordDto.setUserId(user.getId());
             
-            if (!user.getId().equals(password.getUser().getId())) {
-                throw new SecurityException("Not authorized to save this password");
-            }
+            // Convert DTO to entity
+            Password password = passwordMapper.toEntity(passwordDto);
+            password.setUser(user);
             
-            boolean isNew = password.getId() == null;
-            if (isNew || passwordWasChanged(password)) {
-                validatePasswordStrength(password.getPasswordValue(), bindingResult);
-                if (bindingResult.hasErrors()) {
-                    return "passwords/password-form";
+            boolean isNew = passwordDto.getId() == null;
+            
+            // If this is an edit (not new) and the password field is empty, get the existing password
+            if (!isNew && (passwordDto.getPassword() == null || passwordDto.getPassword().isEmpty())) {
+                Password existingPassword = passwordService.findById(passwordDto.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Password not found with ID: " + passwordDto.getId()));
+                password.setPasswordValue(existingPassword.getPasswordValue());
+            } else if (isNew || passwordWasChanged(password)) {
+                // Check password strength but don't block submission
+                String strengthWarning = checkPasswordStrength(passwordDto.getPassword());
+                if (strengthWarning != null) {
+                    redirectAttributes.addFlashAttribute("passwordWarning", strengthWarning);
                 }
             }
             
@@ -101,9 +114,9 @@ public class PasswordViewController {
             
             if (isNew) {
                 password.setCreatedAt(now);
-            } else if (password.getCreatedAt() == null) {
-                Password existingPassword = passwordService.findById(password.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Password not found with ID: " + password.getId()));
+            } else {
+                Password existingPassword = passwordService.findById(passwordDto.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Password not found with ID: " + passwordDto.getId()));
                 password.setCreatedAt(existingPassword.getCreatedAt());
             }
             
@@ -128,6 +141,9 @@ public class PasswordViewController {
         } catch (Exception e) {
             logger.error("Error saving password", e);
             model.addAttribute("error", "An error occurred: " + e.getMessage());
+            // Add categories to the form for redisplay
+            List<Category> categories = categoryService.findByUserId(user.getId());
+            model.addAttribute("categories", categories);
             return "passwords/password-form";
         }
     }
@@ -145,10 +161,46 @@ public class PasswordViewController {
         return !Objects.equals(existingPassword.getPasswordValue(), password.getPasswordValue());
     }
     
-    private void validatePasswordStrength(String password, BindingResult bindingResult) {
+    /**
+     * Checks password strength and returns a warning message if the password is weak
+     * @param password the password to check
+     * @return a warning message if password is weak, null if password is strong enough
+     */
+    private String checkPasswordStrength(String password) {
+        // If password is empty (when editing and not changing password), skip validation
+        if (password == null || password.isEmpty()) {
+            return null;
+        }
+        
         // Check minimum length
         if (password.length() < 8) {
-            bindingResult.rejectValue("passwordValue", "password.tooWeak", 
+            return "Warning: Your password is less than 8 characters long. Consider using a longer password for better security.";
+        }
+        
+        // Check for complexity (at least 3 out of 4 categories)
+        int categories = 0;
+        if (password.matches(".*[a-z].*")) categories++; // lowercase
+        if (password.matches(".*[A-Z].*")) categories++; // uppercase
+        if (password.matches(".*[0-9].*")) categories++; // digits
+        if (password.matches(".*[^a-zA-Z0-9].*")) categories++; // special chars
+        
+        if (categories < 3) {
+            return "Warning: Your password could be stronger. Consider using a mix of lowercase letters, uppercase letters, numbers, and special characters.";
+        }
+        
+        return null; // No warning needed
+    }
+    
+    // Keep the old validatePasswordStrength method for now for backward compatibility
+    private void validatePasswordStrength(String password, BindingResult bindingResult) {
+        // If password is empty (when editing and not changing password), skip validation
+        if (password == null || password.isEmpty()) {
+            return;
+        }
+        
+        // Check minimum length
+        if (password.length() < 8) {
+            bindingResult.rejectValue("password", "password.tooWeak", 
                 "Password must be at least 8 characters long");
             return;
         }
@@ -161,7 +213,7 @@ public class PasswordViewController {
         if (password.matches(".*[^a-zA-Z0-9].*")) categories++; // special chars
         
         if (categories < 3) {
-            bindingResult.rejectValue("passwordValue", "password.tooWeak", 
+            bindingResult.rejectValue("password", "password.tooWeak", 
                 "Password must contain at least 3 of the following: lowercase letters, uppercase letters, numbers, and special characters");
         }
     }
@@ -173,8 +225,8 @@ public class PasswordViewController {
         var authenticatedUser = userService.findByUsername(authentication.getName()).orElseThrow();
         
         try {
-            // Get the password
-            Password password = passwordService.findById(id)
+            // Get the password with tags
+            Password password = passwordService.findByIdWithTags(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid password Id:" + id));
                 
             // Security check - ensure user owns this password by comparing IDs (no lazy loading issue)
@@ -182,11 +234,14 @@ public class PasswordViewController {
                 throw new SecurityException("Not authorized to edit this password");
             }
             
+            // Convert to DTO
+            PasswordCreationDto passwordDto = passwordMapper.toCreationDto(password);
+            
             // Add categories to the form
             List<Category> categories = categoryService.findByUserId(authenticatedUser.getId());
             model.addAttribute("categories", categories);
             
-            model.addAttribute("password", password);
+            model.addAttribute("password", passwordDto);
             model.addAttribute("currentUserId", authenticatedUser.getId());
             return "passwords/password-form";
         } catch (Exception e) {

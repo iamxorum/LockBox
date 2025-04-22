@@ -2,10 +2,11 @@ package com.lockbox.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.http.MediaType;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
 @Configuration
@@ -24,11 +25,22 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
     
     @Override
+    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+        configurer
+            .favorParameter(false)
+            .ignoreAcceptHeader(false)
+            .defaultContentType(MediaType.APPLICATION_JSON)
+            .mediaType("js", MediaType.valueOf("application/javascript"));
+    }
+    
+    @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/css/**")
-                .addResourceLocations("classpath:/static/css/");
+                .addResourceLocations("classpath:/static/css/")
+                .setCacheControl(org.springframework.http.CacheControl.noCache())
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver());
                 
-        // Configure JavaScript files with proper MIME type
         registry.addResourceHandler("/js/**")
                 .addResourceLocations("classpath:/static/js/")
                 .setCacheControl(org.springframework.http.CacheControl.noCache())
@@ -36,6 +48,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResolver(new PathResourceResolver());
                 
         registry.addResourceHandler("/images/**")
-                .addResourceLocations("classpath:/static/images/");
+                .addResourceLocations("classpath:/static/images/")
+                .setCacheControl(org.springframework.http.CacheControl.noCache())
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver());
     }
 } 

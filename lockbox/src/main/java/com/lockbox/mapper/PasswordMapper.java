@@ -12,6 +12,7 @@ import com.lockbox.dto.TagDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,49 @@ public class PasswordMapper {
                         return tagDto;
                     })
                     .collect(Collectors.toSet()));
+        }
+        
+        return dto;
+    }
+    
+    public PasswordCreationDto toCreationDto(Password password) {
+        if (password == null) {
+            return null;
+        }
+        
+        PasswordCreationDto dto = new PasswordCreationDto();
+        dto.setId(password.getId());
+        dto.setTitle(password.getTitle());
+        dto.setUsername(password.getUsername());
+        dto.setPassword(password.getPasswordValue());
+        dto.setWebsiteUrl(password.getUrl());
+        dto.setNotes(password.getNotes());
+        
+        if (password.getCategory() != null) {
+            dto.setCategoryId(password.getCategory().getId());
+        }
+        
+        if (password.getUser() != null) {
+            dto.setUserId(password.getUser().getId());
+        }
+        
+        if (password.getTags() != null && !password.getTags().isEmpty()) {
+            // Set both the tag objects and the IDs for the form
+            Set<TagDto> tagDtos = password.getTags().stream()
+                .map(tag -> {
+                    TagDto tagDto = new TagDto();
+                    tagDto.setId(tag.getId());
+                    tagDto.setName(tag.getName());
+                    return tagDto;
+                })
+                .collect(Collectors.toSet());
+            dto.setTags(tagDtos);
+            
+            // Also set the tag IDs for saving
+            List<Long> tagIds = password.getTags().stream()
+                .map(Tag::getId)
+                .collect(Collectors.toList());
+            dto.setTagIds(tagIds);
         }
         
         return dto;

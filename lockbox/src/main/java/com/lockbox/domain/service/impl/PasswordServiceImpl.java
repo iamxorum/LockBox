@@ -54,4 +54,19 @@ public class PasswordServiceImpl implements PasswordService {
     public List<Password> findByUserId(Long userId) {
         return passwordRepository.findByUserId(userId);
     }
+    
+    @Override
+    public Optional<Password> findByIdWithCategory(Long id) {
+        return passwordRepository.findByIdWithCategory(id);
+    }
+    
+    @Override
+    public Optional<Password> findByIdWithTags(Long id) {
+        return passwordRepository.findByIdWithTags(id);
+    }
+    
+    @Override
+    public List<Password> findByUserIdAndCategoryId(Long userId, Long categoryId) {
+        return passwordRepository.findByUserIdAndCategoryId(userId, categoryId);
+    }
 } 

@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import com.lockbox.domain.model.Password;
 
@@ -27,4 +28,12 @@ public interface PasswordRepository extends JpaRepository<Password, Long> {
     
     @Query("SELECT DISTINCT p FROM Password p LEFT JOIN FETCH p.category LEFT JOIN FETCH p.user LEFT JOIN FETCH p.tags WHERE p.id = :id")
     Optional<Password> findByIdWithCategory(@Param("id") Long id);
+    
+    List<Password> findByUserIdAndUsernameContainingIgnoreCase(Long userId, String username);
+    
+    @Query("SELECT DISTINCT p FROM Password p LEFT JOIN FETCH p.tags WHERE p.user.id = :userId")
+    List<Password> findByUserIdWithTags(@PathVariable("userId") Long userId);
+    
+    @Query("SELECT DISTINCT p FROM Password p LEFT JOIN FETCH p.tags WHERE p.id = :id")
+    Optional<Password> findByIdWithTags(@PathVariable("id") Long id);
 } 

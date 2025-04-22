@@ -15,6 +15,8 @@ import java.util.Set;
 @AllArgsConstructor
 public class PasswordCreationDto {
     
+    private Long id;
+    
     @NotBlank(message = "Title is required")
     private String title;
     
@@ -52,12 +54,12 @@ public class PasswordCreationDto {
         this.password = password;
     }
 
-    public String getWebsiteUrl() {
+    public String getUrl() {
         return websiteUrl;
     }
 
-    public void setWebsiteUrl(String websiteUrl) {
-        this.websiteUrl = websiteUrl;
+    public void setUrl(String url) {
+        this.websiteUrl = url;
     }
 
     public String getNotes() {

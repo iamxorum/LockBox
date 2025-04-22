@@ -18,4 +18,6 @@ public class CategoryCreationDto {
     private String description;
     
     private String color;
+    
+    private Long userId;
 } 
