@@ -214,6 +214,7 @@
                         <input type="hidden" name="id" th:if="${secureNote.id != null}" th:value="*{id}">
                         <input type="hidden" name="user.id" th:value="${currentUserId}">
                         <input type="hidden" name="createdAt" th:if="${secureNote.id != null}" th:value="*{createdAt}">
+                        <input type="hidden" id="currentUserId" name="currentUserId" th:value="${currentUserId}">
                         
                         <!-- Consolidated Error Messages -->
                         <div class="alert alert-danger" th:if="${error != null or #fields.hasErrors('*')}">
@@ -350,7 +351,9 @@
             // Get CSRF token and current user ID
             const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
             const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
-            const currentUserId = /*[[${currentUserId}]]*/ null;
+            const currentUserId = document.getElementById('currentUserId').value;
+            
+            console.log('Debug - Current User ID:', currentUserId);
             
             // Initialize tags array from existing tags
             const existingTags = /*[[${secureNote.tags}]]*/ [];
@@ -375,7 +378,7 @@
                             },
                             body: JSON.stringify({
                                 name: tagName,
-                                userId: parseInt(currentUserId)
+                                userId: currentUserId
                             })
                         })
                         .then(response => {
@@ -399,6 +402,7 @@
                                 });
                             }
                             return response.json().then(errorData => {
+                                console.error('Tag creation error:', errorData);
                                 throw new Error(errorData.message || 'Failed to create tag');
                             });
                         })
@@ -422,6 +426,7 @@
                             }
                         })
                         .catch(error => {
+                            console.error('Tag creation error:', error);
                             showError(error.message);
                         });
                     }

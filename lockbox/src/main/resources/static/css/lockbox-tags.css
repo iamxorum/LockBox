@@ -2,52 +2,188 @@
 .tag-input-container {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    width: 100%;
 }
 
-.tag-list {
+.tag-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.tag-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.selected-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    min-height: 2.5rem;
+    min-height: 32px;
     padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background-color: var(--bg-input);
 }
 
-.tag {
+.tag-item {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.5rem;
-    background-color: #e9ecef;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    gap: 0.5rem;
+    padding: 4px 10px;
+    background-color: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--primary);
+    gap: 6px;
+    transition: all 0.2s ease;
+    animation: tagAppear 0.3s ease forwards;
+}
+
+.tag-item:hover {
+    background-color: rgba(139, 92, 246, 0.15);
+    transform: translateY(-1px);
 }
 
 .tag-remove {
     background: none;
     border: none;
-    color: #6c757d;
+    color: var(--primary);
     cursor: pointer;
     padding: 0;
-    font-size: 0.875rem;
+    font-size: 1rem;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.15s ease;
 }
 
 .tag-remove:hover {
-    color: #dc3545;
+    background-color: rgba(139, 92, 246, 0.2);
+    color: var(--primary-dark);
 }
 
-.tag-input-wrapper {
-    position: relative;
+.no-tags {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.85rem;
 }
 
-.tag-input-wrapper input[type="text"] {
+/* Tag suggestions */
+.tag-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 4px;
+}
+
+.tag-suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tag-suggestion-item:hover {
+    background-color: rgba(139, 92, 246, 0.1);
+}
+
+/* Tag animations */
+@keyframes tagAppear {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes tagRemove {
+    to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.8);
+    }
+}
+
+.tag-item.removing {
+    animation: tagRemove 0.2s ease forwards;
+}
+
+/* Tag color variants */
+.tag-blue {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+
+.tag-green {
+    background-color: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.tag-red {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.tag-yellow {
+    background-color: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.tag-purple {
+    background-color: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.2);
+    color: #8b5cf6;
+}
+
+/* Tag count badge */
+.tag-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(139, 92, 246, 0.2);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-left: 6px;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .tag-item {
+    background-color: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+[data-theme="dark"] .tag-remove:hover {
+    background-color: rgba(139, 92, 246, 0.3);
 }
 
 /* Modal Styles */

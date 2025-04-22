@@ -2,10 +2,12 @@ package com.lockbox.controller.web;
 
 import com.lockbox.domain.model.Category;
 import com.lockbox.domain.model.Password;
+import com.lockbox.domain.model.Tag;
 import com.lockbox.domain.model.User;
 import com.lockbox.domain.service.AuditLogService;
 import com.lockbox.domain.service.CategoryService;
 import com.lockbox.domain.service.PasswordService;
+import com.lockbox.domain.service.TagService;
 import com.lockbox.domain.service.UserService;
 import com.lockbox.dto.PasswordCreationDto;
 import com.lockbox.mapper.PasswordMapper;
@@ -26,6 +28,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/passwords")
@@ -36,16 +40,18 @@ public class PasswordViewController {
     private final UserService userService;
     private final AuditLogService auditLogService;
     private final CategoryService categoryService;
+    private final TagService tagService;
     private final PasswordMapper passwordMapper;
 
     @Autowired
     public PasswordViewController(PasswordService passwordService, UserService userService, 
                                 AuditLogService auditLogService, CategoryService categoryService,
-                                PasswordMapper passwordMapper) {
+                                TagService tagService, PasswordMapper passwordMapper) {
         this.passwordService = passwordService;
         this.userService = userService;
         this.auditLogService = auditLogService;
         this.categoryService = categoryService;
+        this.tagService = tagService;
         this.passwordMapper = passwordMapper;
     }
 
@@ -91,36 +97,63 @@ public class PasswordViewController {
             // Set the user ID
             passwordDto.setUserId(user.getId());
             
-            // Convert DTO to entity
-            Password password = passwordMapper.toEntity(passwordDto);
-            password.setUser(user);
-            
             boolean isNew = passwordDto.getId() == null;
+            Password password;
             
-            // If this is an edit (not new) and the password field is empty, get the existing password
-            if (!isNew && (passwordDto.getPassword() == null || passwordDto.getPassword().isEmpty())) {
-                Password existingPassword = passwordService.findById(passwordDto.getId())
+            if (isNew) {
+                // Create new password
+                password = passwordMapper.toEntity(passwordDto);
+                password.setUser(user);
+                password.setCreatedAt(LocalDateTime.now());
+            } else {
+                // Edit existing password
+                password = passwordService.findByIdWithTags(passwordDto.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Password not found with ID: " + passwordDto.getId()));
-                password.setPasswordValue(existingPassword.getPasswordValue());
-            } else if (isNew || passwordWasChanged(password)) {
-                // Check password strength but don't block submission
-                String strengthWarning = checkPasswordStrength(passwordDto.getPassword());
-                if (strengthWarning != null) {
-                    redirectAttributes.addFlashAttribute("passwordWarning", strengthWarning);
+                
+                // Security check - ensure user owns this password
+                if (!password.getUser().getId().equals(user.getId())) {
+                    throw new SecurityException("Not authorized to edit this password");
+                }
+                
+                // Update fields from DTO
+                password.setTitle(passwordDto.getTitle());
+                password.setUsername(passwordDto.getUsername());
+                password.setUrl(passwordDto.getWebsiteUrl());
+                password.setNotes(passwordDto.getNotes());
+                
+                // Set category if provided
+                if (passwordDto.getCategoryId() != null) {
+                    Category category = categoryService.findById(passwordDto.getCategoryId())
+                        .orElseThrow(() -> new IllegalArgumentException("Category not found with ID: " + passwordDto.getCategoryId()));
+                    password.setCategory(category);
+                } else {
+                    password.setCategory(null);
+                }
+                
+                // Update password if provided
+                if (passwordDto.getPassword() != null && !passwordDto.getPassword().isEmpty()) {
+                    password.setPasswordValue(passwordDto.getPassword());
+                    
+                    // Check password strength but don't block submission
+                    String strengthWarning = checkPasswordStrength(passwordDto.getPassword());
+                    if (strengthWarning != null) {
+                        redirectAttributes.addFlashAttribute("passwordWarning", strengthWarning);
+                    }
+                }
+                
+                // Update tags
+                password.getTags().clear();
+                if (passwordDto.getTagIds() != null && !passwordDto.getTagIds().isEmpty()) {
+                    Set<Tag> tags = passwordDto.getTagIds().stream()
+                        .map(tagId -> tagService.findById(tagId)
+                            .orElseThrow(() -> new IllegalArgumentException("Tag not found with ID: " + tagId)))
+                        .collect(Collectors.toSet());
+                    password.setTags(tags);
                 }
             }
             
-            LocalDateTime now = LocalDateTime.now();
-            
-            if (isNew) {
-                password.setCreatedAt(now);
-            } else {
-                Password existingPassword = passwordService.findById(passwordDto.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Password not found with ID: " + passwordDto.getId()));
-                password.setCreatedAt(existingPassword.getCreatedAt());
-            }
-            
-            password.setUpdatedAt(now);
+            // Always update the modified timestamp
+            password.setUpdatedAt(LocalDateTime.now());
             
             Password savedPassword = passwordService.save(password);
             

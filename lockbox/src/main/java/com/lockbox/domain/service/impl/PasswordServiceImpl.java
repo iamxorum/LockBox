@@ -52,7 +52,7 @@ public class PasswordServiceImpl implements PasswordService {
     
     @Override
     public List<Password> findByUserId(Long userId) {
-        return passwordRepository.findByUserId(userId);
+        return passwordRepository.findByUserIdWithTags(userId);
     }
     
     @Override

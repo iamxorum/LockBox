@@ -55,66 +55,131 @@ form {
 
 /* Form sections */
 .form-section {
-  padding: 1.5rem;
-  background-color: var(--bg-input);
+  background-color: var(--bg-card);
   border-radius: var(--radius);
-  border: 1px solid var(--border);
+  padding: 1.5rem;
   margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-section:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.form-section:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background-color: var(--primary);
+  opacity: 0.6;
 }
 
 .form-section-title {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-primary);
   margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border);
-}
-
-/* Form groups */
-.form-group {
+  color: var(--primary);
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0; /* Remove margin since we're using grid gap */
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
 }
 
-/* Full width form group */
-.form-group-full {
-  grid-column: 1 / -1;
+/* Form groups and inputs */
+.form-group {
+  margin-bottom: 1.25rem;
+  position: relative;
 }
 
-/* Password specific section */
-.password-section {
-  background-color: var(--bg-input);
-  padding: 1.5rem;
-  border-radius: var(--radius);
+input, textarea, select {
+  width: 100%;
+  padding: 0.75rem 1rem;
   border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1rem;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.password-controls {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 0;
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* Category and tags section */
-.metadata-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  align-items: start;
+input:hover, textarea:hover, select:hover {
+  border-color: rgba(139, 92, 246, 0.4);
 }
 
-/* Notes section */
-.notes-section {
-  grid-column: 1 / -1;
+/* Label styling */
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
 }
 
-textarea {
-  min-height: 120px;
-  resize: vertical;
+/* Password field styling */
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.password-input-container input[type="password"],
+.password-input-container input[type="text"] {
+  flex: 1;
+  padding-right: 2.5rem; /* Space for the toggle button */
+}
+
+/* Category styling */
+.category-select-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.category-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.7em top 50%;
+  background-size: 1em auto;
+  padding-right: 2.5em;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.category-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.category-select option {
+  padding: 8px 12px;
+  margin: 2px 0;
+  border-radius: 4px;
 }
 
 /* Form actions */
@@ -123,8 +188,17 @@ textarea {
   justify-content: flex-end;
   gap: 1rem;
   margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
+}
+
+/* Error message styling */
+.error-message {
+  margin-top: 0.5rem;
+  color: var(--error);
+  font-size: 0.875rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  border-left: 3px solid var(--error);
 }
 
 /* Password-specific styles */
@@ -150,39 +224,77 @@ textarea {
   margin-top: 0.375rem;
 }
 
-/* Category select container */
-.category-select-container {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
+/* Category color dot */
+.category-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.category-select-container select {
-  flex: 1;
-  height: 2.5rem;
-  padding: 0 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
-  background-color: var(--input-bg);
-  color: var(--text-color);
-  font-size: 0.875rem;
+/* Selected option styling */
+.category-select option:checked {
+  background-color: var(--bg-input);
+  font-weight: 600;
+}
+
+/* Category option pills in list view */
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+  margin-right: 8px;
+  background-color: var(--category-color, transparent);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  min-width: 60px;
+  justify-content: center;
+}
+
+/* Color preview in color input */
+.color-preview {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-left: 10px;
   transition: all 0.2s ease;
 }
 
-.category-select-container select:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px var(--primary-color-alpha);
-  outline: none;
-}
-
-.category-select-container .btn {
-  height: 2.5rem;
-  padding: 0 1rem;
+/* Color input container */
+.color-input-container {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+}
+
+/* Color presets for category creation */
+.color-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 0.5rem;
+}
+
+.color-preset {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.color-preset:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Tag input system */
@@ -407,35 +519,6 @@ textarea {
   }
 }
 
-/* Input styling improvements */
-input, textarea, select {
-  padding: 0.875rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-family: 'Inter', sans-serif;
-  font-size: 1rem;
-  background-color: var(--bg-card);
-  color: var(--text-primary);
-  transition: all 0.2s;
-  width: 100%;
-}
-
-input:focus, textarea:focus, select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-}
-
-/* Improved label styling */
-label {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 /* Field hint text */
 .field-hint {
   font-size: 0.875rem;
@@ -544,55 +627,43 @@ label {
   color: var(--text-secondary);
 }
 
-.password-input-container {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    width: 100%;
-}
-
-.password-input-container input[type="password"],
-.password-input-container input[type="text"] {
-    flex: 1;
-}
-
 .password-input-container .btn {
-    white-space: nowrap;
-    padding: 0.5rem 0.75rem;
-    height: 100%;
-    min-height: 38px;
+  white-space: nowrap;
+  padding: 0.5rem 0.75rem;
+  height: 100%;
+  min-height: 38px;
 }
 
 /* Alert Styles */
 .alert {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 0.5rem;
-    border: 1px solid transparent;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
 }
 
 .alert-danger {
-    background-color: rgba(220, 53, 69, 0.1);
-    border-color: rgba(220, 53, 69, 0.2);
-    color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.1);
+  border-color: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
 }
 
 .error-list {
-    margin: 0;
-    padding-left: 1.25rem;
+  margin: 0;
+  padding-left: 1.25rem;
 }
 
 .error-list li {
-    margin-bottom: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
 .error-list li:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 /* Dark theme support */
 [data-theme="dark"] .alert-danger {
-    background-color: rgba(220, 53, 69, 0.15);
-    border-color: rgba(220, 53, 69, 0.3);
-    color: #ff6b6b;
+  background-color: rgba(220, 53, 69, 0.15);
+  border-color: rgba(220, 53, 69, 0.3);
+  color: #ff6b6b;
 } 
