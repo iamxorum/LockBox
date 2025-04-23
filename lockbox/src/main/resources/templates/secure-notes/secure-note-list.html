@@ -387,99 +387,142 @@
                 });
             });
 
-            // Rest of the original script
+            // Initialize UI elements
             const searchFilter = document.getElementById('searchFilter');
             const categoryFilter = document.getElementById('categoryFilter');
             const tagFilter = document.getElementById('tagFilter');
             const sortFilter = document.getElementById('sortFilter');
             const activeFilters = document.getElementById('activeFilters');
+            const clearFiltersBtn = document.getElementById('clearFilters');
+            const table = document.querySelector('.table');
+            const rows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
             
             function updateFilters() {
                 const searchTerm = searchFilter.value.toLowerCase();
                 const categoryId = categoryFilter.value;
-                const sortBy = sortFilter.value;
+                const tagId = tagFilter.value;
+                const sortOption = sortFilter.value;
                 
                 // Clear active filters
                 activeFilters.innerHTML = '';
                 
-                // Add search filter if present
+                // Show active search filter
                 if (searchTerm) {
-                    const searchTag = document.createElement('span');
-                    searchTag.className = 'filter-tag';
-                    searchTag.innerHTML = `Search: ${searchTerm} <button class="remove-filter" data-type="search">×</button>`;
-                    activeFilters.appendChild(searchTag);
+                    addActiveFilter('Search: ' + searchTerm, 'search');
                 }
                 
-                // Add category filter if present
+                // Show active category filter
                 if (categoryId) {
-                    const categoryName = categoryFilter.options[categoryFilter.selectedIndex].text;
-                    const categoryTag = document.createElement('span');
-                    categoryTag.className = 'filter-tag';
-                    categoryTag.innerHTML = `Category: ${categoryName} <button class="remove-filter" data-type="category">×</button>`;
-                    activeFilters.appendChild(categoryTag);
+                    const categoryOption = categoryFilter.querySelector(`option[value="${categoryId}"]`);
+                    if (categoryOption) {
+                        addActiveFilter('Category: ' + categoryOption.textContent, 'category');
+                    }
+                }
+                
+                // Show active tag filter
+                if (tagId) {
+                    const tagOption = tagFilter.querySelector(`option[value="${tagId}"]`);
+                    if (tagOption) {
+                        addActiveFilter('Tag: ' + tagOption.textContent, 'tag');
+                    }
                 }
                 
                 // Filter rows
-                rows.forEach(row => {
-                    const title = row.cells[0].textContent.toLowerCase();
-                    const content = row.cells[2].textContent.toLowerCase();
-                    const rowCategory = row.getAttribute('data-category');
-                    const matchesSearch = !searchTerm || title.includes(searchTerm) || content.includes(searchTerm);
-                    const matchesCategory = !categoryId || rowCategory === categoryId;
-                    
-                    row.style.display = matchesSearch && matchesCategory ? '' : 'none';
-                });
+                if (rows.length > 0) {
+                    rows.forEach(row => {
+                        const title = row.cells[0].textContent.toLowerCase();
+                        const content = row.cells[2] ? row.cells[2].textContent.toLowerCase() : '';
+                        const rowCategory = row.getAttribute('data-category');
+                        const rowTags = row.getAttribute('data-tags') ? row.getAttribute('data-tags').split(',') : [];
+                        
+                        const matchesSearch = !searchTerm || title.includes(searchTerm) || content.includes(searchTerm);
+                        const matchesCategory = !categoryId || rowCategory === categoryId;
+                        const matchesTag = !tagId || rowTags.includes(tagId);
+                        
+                        row.style.display = matchesSearch && matchesCategory && matchesTag ? '' : 'none';
+                    });
+                }
                 
                 // Sort rows
-                const sortedRows = Array.from(rows).filter(row => row.style.display !== 'none');
-                sortedRows.sort((a, b) => {
-                    const aTitle = a.cells[0].textContent;
-                    const bTitle = b.cells[0].textContent;
-                    const aCreated = a.getAttribute('data-created');
-                    const bCreated = b.getAttribute('data-created');
-                    
-                    switch (sortBy) {
-                        case 'title':
-                            return aTitle.localeCompare(bTitle);
-                        case 'title-desc':
-                            return bTitle.localeCompare(aTitle);
-                        case 'created':
-                            return new Date(bCreated) - new Date(aCreated);
-                        case 'created-asc':
-                            return new Date(aCreated) - new Date(bCreated);
-                        default:
-                            return 0;
-                    }
-                });
-                
                 if (table) {
                     const tbody = table.querySelector('tbody');
-                    sortedRows.forEach(row => tbody.appendChild(row));
+                    const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+                    
+                    visibleRows.sort((a, b) => {
+                        const aTitle = a.cells[0].textContent;
+                        const bTitle = b.cells[0].textContent;
+                        const aCreated = a.getAttribute('data-created');
+                        const bCreated = b.getAttribute('data-created');
+                        
+                        switch (sortOption) {
+                            case 'title':
+                                return aTitle.localeCompare(bTitle);
+                            case 'title-desc':
+                                return bTitle.localeCompare(aTitle);
+                            case 'created':
+                                return new Date(bCreated) - new Date(aCreated);
+                            case 'created-asc':
+                                return new Date(aCreated) - new Date(bCreated);
+                            default:
+                                return 0;
+                        }
+                    });
+                    
+                    visibleRows.forEach(row => tbody.appendChild(row));
                 }
             }
-            
-            // Event listeners
-            if (searchFilter) searchFilter.addEventListener('input', updateFilters);
-            if (categoryFilter) categoryFilter.addEventListener('change', updateFilters);
-            if (sortFilter) sortFilter.addEventListener('change', updateFilters);
-            
-            // Handle filter removal
-            if (activeFilters) {
-                activeFilters.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('remove-filter')) {
-                        const type = e.target.getAttribute('data-type');
-                        if (type === 'search') {
-                            searchFilter.value = '';
-                        } else if (type === 'category') {
-                            categoryFilter.value = '';
-                        }
-                        updateFilters();
+
+            function addActiveFilter(text, type) {
+                const filterTag = document.createElement('span');
+                filterTag.className = 'filter-tag';
+                filterTag.innerHTML = `${text} <button class="remove-filter" data-type="${type}">×</button>`;
+                activeFilters.appendChild(filterTag);
+                
+                // Add click handler to remove button
+                const removeBtn = filterTag.querySelector('.remove-filter');
+                removeBtn.addEventListener('click', function() {
+                    // Clear the corresponding filter
+                    if (type === 'search') {
+                        searchFilter.value = '';
+                    } else if (type === 'category') {
+                        categoryFilter.value = '';
+                    } else if (type === 'tag') {
+                        tagFilter.value = '';
                     }
+                    
+                    // Update filters
+                    updateFilters();
                 });
             }
+
+            // Add event listeners
+            searchFilter.addEventListener('input', debounce(updateFilters, 300));
+            categoryFilter.addEventListener('change', updateFilters);
+            tagFilter.addEventListener('change', updateFilters);
+            sortFilter.addEventListener('change', updateFilters);
             
-            // Initial filter update
-            if (table) updateFilters();
+            // Add event listener for clear filters button
+            clearFiltersBtn.addEventListener('click', function() {
+                searchFilter.value = '';
+                categoryFilter.value = '';
+                tagFilter.value = '';
+                sortFilter.value = 'title';
+                updateFilters();
+            });
+            
+            // Helper function for debouncing
+            function debounce(func, wait) {
+                let timeout;
+                return function() {
+                    const context = this;
+                    const args = arguments;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(context, args), wait);
+                };
+            }
+            
+            // Initialize filters
+            updateFilters();
         });
     </script>
 </body>

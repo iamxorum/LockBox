@@ -11,7 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -34,6 +39,8 @@ public class CategoryViewController {
                                RedirectAttributes redirectAttributes,
                                HttpServletRequest request) {
         try {
+            // Log request info for debugging
+            System.out.println("Creating category: " + categoryCreationDto.getName());
             User user = userService.findById(categoryCreationDto.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -49,6 +56,7 @@ public class CategoryViewController {
             redirectAttributes.addFlashAttribute("success", "Category created successfully");
             return getRedirectUrl(request);
         } catch (Exception e) {
+            e.printStackTrace(); // Add stack trace for easier debugging
             redirectAttributes.addFlashAttribute("error", "Failed to create category: " + e.getMessage());
             return getRedirectUrl(request);
         }
@@ -60,5 +68,35 @@ public class CategoryViewController {
             return "redirect:" + referer.substring(referer.indexOf("/", 8));
         }
         return "redirect:/";
+    }
+
+    /**
+     * Alternative endpoint that accepts JSON for AJAX requests
+     */
+    @PostMapping(value = "/api", consumes = "application/json")
+    @ResponseBody
+    public ResponseEntity<?> createCategoryJson(@Valid @RequestBody CategoryCreationDto categoryCreationDto, 
+                                             HttpServletRequest request) {
+        try {
+            System.out.println("Creating category via JSON API: " + categoryCreationDto.getName());
+            User user = userService.findById(categoryCreationDto.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (categoryService.existsByUserIdAndName(user.getId(), categoryCreationDto.getName())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("A category with this name already exists");
+            }
+
+            Category category = categoryMapper.toEntity(categoryCreationDto);
+            category.setUser(user);
+            Category savedCategory = categoryService.save(category);
+            
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(categoryMapper.toDto(savedCategory));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Failed to create category: " + e.getMessage());
+        }
     }
 } 
