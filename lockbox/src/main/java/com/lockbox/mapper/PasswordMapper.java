@@ -59,6 +59,11 @@ public class PasswordMapper {
                         return tagDto;
                     })
                     .collect(Collectors.toSet()));
+            
+            // Populate tagIds list
+            dto.setTagIds(password.getTags().stream()
+                    .map(Tag::getId)
+                    .collect(Collectors.toList()));
         }
         
         return dto;

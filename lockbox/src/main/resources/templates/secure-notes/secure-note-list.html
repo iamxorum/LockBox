@@ -398,13 +398,15 @@
             const rows = table ? Array.from(table.querySelectorAll('tbody tr')) : [];
             
             function updateFilters() {
-                const searchTerm = searchFilter.value.toLowerCase();
-                const categoryId = categoryFilter.value;
-                const tagId = tagFilter.value;
-                const sortOption = sortFilter.value;
+                const searchTerm = searchFilter ? searchFilter.value.toLowerCase() : '';
+                const categoryId = categoryFilter ? categoryFilter.value : '';
+                const tagId = tagFilter ? tagFilter.value : '';
+                const sortOption = sortFilter ? sortFilter.value : 'title';
                 
                 // Clear active filters
-                activeFilters.innerHTML = '';
+                if (activeFilters) {
+                    activeFilters.innerHTML = '';
+                }
                 
                 // Show active search filter
                 if (searchTerm) {
@@ -412,7 +414,7 @@
                 }
                 
                 // Show active category filter
-                if (categoryId) {
+                if (categoryId && categoryFilter) {
                     const categoryOption = categoryFilter.querySelector(`option[value="${categoryId}"]`);
                     if (categoryOption) {
                         addActiveFilter('Category: ' + categoryOption.textContent, 'category');
@@ -420,7 +422,7 @@
                 }
                 
                 // Show active tag filter
-                if (tagId) {
+                if (tagId && tagFilter) {
                     const tagOption = tagFilter.querySelector(`option[value="${tagId}"]`);
                     if (tagOption) {
                         addActiveFilter('Tag: ' + tagOption.textContent, 'tag');
@@ -496,19 +498,29 @@
             }
 
             // Add event listeners
-            searchFilter.addEventListener('input', debounce(updateFilters, 300));
-            categoryFilter.addEventListener('change', updateFilters);
-            tagFilter.addEventListener('change', updateFilters);
-            sortFilter.addEventListener('change', updateFilters);
+            if (searchFilter) {
+                searchFilter.addEventListener('input', debounce(updateFilters, 300));
+            }
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', updateFilters);
+            }
+            if (tagFilter) {
+                tagFilter.addEventListener('change', updateFilters);
+            }
+            if (sortFilter) {
+                sortFilter.addEventListener('change', updateFilters);
+            }
             
             // Add event listener for clear filters button
-            clearFiltersBtn.addEventListener('click', function() {
-                searchFilter.value = '';
-                categoryFilter.value = '';
-                tagFilter.value = '';
-                sortFilter.value = 'title';
-                updateFilters();
-            });
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', function() {
+                    if (searchFilter) searchFilter.value = '';
+                    if (categoryFilter) categoryFilter.value = '';
+                    if (tagFilter) tagFilter.value = '';
+                    if (sortFilter) sortFilter.value = 'title';
+                    updateFilters();
+                });
+            }
             
             // Helper function for debouncing
             function debounce(func, wait) {

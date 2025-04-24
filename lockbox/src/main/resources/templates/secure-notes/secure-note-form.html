@@ -343,6 +343,7 @@
                                 <label>Tags</label>
                                 <div class="tag-input-container">
                                     <input type="text" id="tagInput" class="tag-input" placeholder="Type and press Enter to add a tag">
+                                    <div id="tagSuggestions" class="tag-suggestions"></div>
                                     <div id="tagList" class="selected-tags">
                                         <!-- Existing tags will be populated here -->
                                         <th:block th:if="${secureNote.tags != null and not #lists.isEmpty(secureNote.tags)}">
@@ -417,28 +418,21 @@
     </div>
 
     <script th:inline="javascript">
-        // Category modal functions - moved to global scope
-        function showNewCategoryModal() {
-            const modal = new bootstrap.Modal(document.getElementById('newCategoryModal'));
-            modal.show();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Get existing elements and data
-            const currentUserId = document.getElementById('currentUserId').value;
+        // JavaScript for secure note form
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup variables
             const tagInput = document.getElementById('tagInput');
             const tagList = document.getElementById('tagList');
-            const existingTags = tagList.querySelectorAll('.tag-item');
-            
+            const tagSuggestions = document.getElementById('tagSuggestions');
+            const tagIdsInput = document.getElementById('tagIds');
+            const secureNoteId = /*[[${secureNote.id}]]*/ null;
+            const form = document.querySelector('form');
             const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
             const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
-            const form = document.getElementById('secureNoteForm');
+            const currentUserId = document.querySelector('input[name="userId"]')?.value; // Get from hidden input
+            let allUserTags = [];
             
             // Initialize existing tags when editing a note
-            const tagIdsInput = document.getElementById('tagIds');
-            const secureNoteId = document.querySelector('input[name="id"]')?.value;
-            
-            // Initialize tags on page load - specifically for when the page loads with existing tags
             if (secureNoteId && tagIdsInput && tagIdsInput.value) {
                 const tagIdArray = tagIdsInput.value.split(',').map(id => id.trim()).filter(id => id);
                 
@@ -475,6 +469,83 @@
                 });
             });
             
+            // Fetch all user tags for suggestions
+            function fetchUserTags() {
+                fetch('/api/v1/tags', {
+                    headers: {
+                        [header]: token
+                    }
+                })
+                .then(response => response.json())
+                .then(response => {
+                    if (response.success && response.data) {
+                        allUserTags = response.data;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching tags:', error);
+                    showError('Error loading tag suggestions: ' + error.message);
+                });
+            }
+            
+            // Call once on page load
+            fetchUserTags();
+            
+            // Show tag suggestions when input is focused
+            tagInput.addEventListener('focus', function() {
+                showTagSuggestions();
+            });
+            
+            // Show filtered tag suggestions based on input
+            tagInput.addEventListener('input', function() {
+                showTagSuggestions();
+            });
+            
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target !== tagInput && e.target !== tagSuggestions) {
+                    tagSuggestions.style.display = 'none';
+                }
+            });
+            
+            function showTagSuggestions() {
+                // Get currently selected tag IDs
+                const selectedTagIds = Array.from(tagList.querySelectorAll('.tag-remove'))
+                    .map(el => el.getAttribute('data-id'));
+                
+                // Filter tags: show only tags that aren't already selected and match input value
+                const inputValue = tagInput.value.toLowerCase();
+                const filteredTags = allUserTags.filter(tag => {
+                    return !selectedTagIds.includes(tag.id.toString()) && 
+                           tag.name.toLowerCase().includes(inputValue);
+                });
+                
+                // Clear previous suggestions
+                tagSuggestions.innerHTML = '';
+                
+                if (filteredTags.length === 0) {
+                    tagSuggestions.style.display = 'none';
+                    return;
+                }
+                
+                // Add filtered tags to suggestions
+                filteredTags.forEach(tag => {
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.className = 'tag-suggestion-item';
+                    suggestionItem.textContent = tag.name;
+                    suggestionItem.addEventListener('click', function() {
+                        addTagToUI(tag);
+                        tagInput.value = '';
+                        tagSuggestions.style.display = 'none';
+                    });
+                    
+                    tagSuggestions.appendChild(suggestionItem);
+                });
+                
+                // Show suggestions
+                tagSuggestions.style.display = 'block';
+            }
+            
             // Handle tag input
             tagInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
@@ -483,6 +554,15 @@
                     if (tagName) {
                         if (tagName.length > 30) {
                             showError('Tag name must be less than 30 characters');
+                            return;
+                        }
+                        
+                        // Check if tag already exists in the UI by name (case insensitive)
+                        const tagExists = Array.from(tagList.querySelectorAll('.tag-item'))
+                            .some(tagItem => tagItem.firstElementChild.textContent.toLowerCase() === tagName.toLowerCase());
+                        
+                        if (tagExists) {
+                            showError('Tag already added to this note');
                             return;
                         }
                         
@@ -495,34 +575,10 @@
                             },
                             body: JSON.stringify({
                                 name: tagName,
-                                userId: currentUserId
+                                userId: parseInt(currentUserId)
                             })
                         })
-                        .then(response => {
-                            if (response.ok) {
-                                return response.json();
-                            }
-                            if (response.status === 409) { // Conflict - tag already exists
-                                // If tag exists, fetch all user's tags to find the existing one
-                                return fetch('/api/v1/tags', {
-                                    headers: {
-                                        [header]: token
-                                    }
-                                })
-                                .then(response => response.json())
-                                .then(response => {
-                                    const existingTag = response.data.find(tag => tag.name.toLowerCase() === tagName.toLowerCase());
-                                    if (existingTag) {
-                                        return { success: true, data: existingTag };
-                                    }
-                                    throw new Error('Could not find existing tag');
-                                });
-                            }
-                            return response.json().then(errorData => {
-                                console.error('Tag creation error:', errorData);
-                                throw new Error(errorData.message || 'Failed to create tag');
-                            });
-                        })
+                        .then(response => response.json())
                         .then(response => {
                             if (!response.success) {
                                 throw new Error(response.message || 'Failed to process tag');
@@ -557,8 +613,27 @@
                     const tagId = e.target.getAttribute('data-id');
                     
                     if (tagItem && tagId) {
-                        tagItem.remove();
-                        updateTagIds();
+                        // Add removal animation
+                        tagItem.style.opacity = '0';
+                        tagItem.style.transform = 'scale(0.8)';
+                        tagItem.style.transition = 'all 0.2s ease';
+                        
+                        // Remove from DOM after animation completes
+                        setTimeout(() => {
+                            tagItem.remove();
+                            
+                            // Get tag elements and update hidden input directly
+                            const tagElements = tagList.querySelectorAll('.tag-remove');
+                            const tagIds = Array.from(tagElements)
+                                .map(el => el.getAttribute('data-id'))
+                                .filter(id => id);
+                            
+                            // Update the hidden input field
+                            const tagIdsInput = document.getElementById('tagIds');
+                            if (tagIdsInput) {
+                                tagIdsInput.value = tagIds.length > 0 ? tagIds.join(',') : '';
+                            }
+                        }, 200);
                     }
                 }
             });
@@ -602,6 +677,11 @@
                 `;
                 tagList.appendChild(tagElement);
                 updateTagIds();
+                
+                // Add to allUserTags if not already there
+                if (!allUserTags.some(t => t.id === tag.id)) {
+                    allUserTags.push(tag);
+                }
             }
 
             function updateTagIds() {
@@ -644,168 +724,167 @@
             // Style category select options
             const categorySelect = document.getElementById('categoryId');
             
-            function styleCategories() {
-                const options = categorySelect.options;
-                for (let i = 0; i < options.length; i++) {
-                    const option = options[i];
-                    const color = option.getAttribute('data-color');
-                    if (color) {
-                        option.style.setProperty('--option-color', color);
-                        if (!option.getAttribute('styled')) {
-                            const dot = document.createElement('span');
-                            dot.className = 'category-dot';
-                            dot.style.backgroundColor = color;
-                            option.setAttribute('styled', 'true');
-                            option.innerHTML = `${dot.outerHTML}${option.text}`;
-                        }
+            if (categorySelect) {
+                // Apply initial styling
+                styleSelectedOption();
+                
+                // Update styling when selection changes
+                categorySelect.addEventListener('change', styleSelectedOption);
+                
+                function styleSelectedOption() {
+                    const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                    const color = selectedOption.getAttribute('data-color') || '#3b82f6';
+                    
+                    // Reset all options
+                    Array.from(categorySelect.options).forEach(option => {
+                        option.style.backgroundColor = '';
+                        option.style.color = '';
+                    });
+                    
+                    // Style selected option
+                    if (categorySelect.value) {
+                        selectedOption.style.backgroundColor = color + '20'; // Add transparency
+                        selectedOption.style.color = color;
+                        categorySelect.style.borderColor = color;
+                    } else {
+                        categorySelect.style.borderColor = '';
                     }
                 }
             }
-
-            styleCategories();
-        });
-
-        // Category creation function - also moved to global scope
-        function createNewCategory() {
-            const form = document.getElementById('newCategoryForm');
-            const formData = new FormData(form);
             
-            // Get CSRF token
-            const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
-            const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+            // Sidebar toggle functionality
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.querySelector('.sidebar');
             
-            // Basic validation
-            const name = formData.get('name');
-            if (!name || name.trim() === '') {
-                showCategoryError('Category name is required');
-                return;
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    document.querySelector('.content').classList.toggle('expanded');
+                });
             }
             
-            if (name.length > 50) {
-                showCategoryError('Category name must be less than 50 characters');
-                return;
-            }
+            // New category modal functionality
+            const newCategoryModal = document.getElementById('newCategoryModal');
+            const bootstrapModal = new bootstrap.Modal(newCategoryModal);
             
-            // Convert form data to JSON
-            const categoryData = {
-                name: formData.get('name'),
-                description: formData.get('description'),
-                color: formData.get('color'),
-                userId: document.getElementById('currentUserId').value
+            // Show new category modal
+            window.showNewCategoryModal = function() {
+                bootstrapModal.show();
             };
             
-            console.log('Submitting category:', categoryData);
+            // Handle category form submission
+            const categoryForm = document.getElementById('categoryForm');
             
-            fetch('/categories/api', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    [header]: token
-                },
-                body: JSON.stringify(categoryData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        try {
-                            // Try to parse as JSON first
-                            const jsonError = JSON.parse(text);
-                            throw new Error(jsonError.message || 'Failed to create category');
-                        } catch (e) {
-                            // If not JSON or no message, show the raw text or a default message
-                            throw new Error(text || 'Failed to create category');
+            if (categoryForm) {
+                categoryForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const categoryName = document.getElementById('name').value.trim();
+                    const categoryDescription = document.getElementById('description').value.trim();
+                    const categoryColor = document.getElementById('color').value;
+                    
+                    if (!categoryName) {
+                        showCategoryError('Category name is required');
+                        return;
+                    }
+                    
+                    // Create category via API
+                    fetch('/api/v1/categories', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            [header]: token
+                        },
+                        body: JSON.stringify({
+                            name: categoryName,
+                            description: categoryDescription,
+                            color: categoryColor,
+                            userId: parseInt(currentUserId)
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.success) {
+                            throw new Error(response.message || 'Failed to create category');
                         }
+                        
+                        const category = response.data;
+                        
+                        // Add category to select
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.text = category.name;
+                        option.setAttribute('data-color', category.color);
+                        
+                        const categorySelect = document.getElementById('categoryId');
+                        categorySelect.appendChild(option);
+                        categorySelect.value = category.id;
+                        
+                        // Style the select
+                        if (typeof styleSelectedOption === 'function') {
+                            styleSelectedOption();
+                        }
+                        
+                        // Reset form and close modal
+                        categoryForm.reset();
+                        bootstrapModal.hide();
+                        
+                        // Show success message
+                        showSuccess('Category created successfully');
+                    })
+                    .catch(error => {
+                        console.error('Error creating category:', error);
+                        showCategoryError(error.message || 'Failed to create category');
                     });
-                }
-                return response.json();
-            })
-            .then(category => {
-                // Add the new category to the select dropdown
-                const select = document.getElementById('categoryId');
-                const option = new Option(category.name, category.id);
-                option.setAttribute('data-color', category.color);
-                option.style.setProperty('--option-color', category.color);
-                select.add(option);
-                
-                // Add the dot and style the new option
-                const dot = document.createElement('span');
-                dot.className = 'category-dot';
-                dot.style.backgroundColor = category.color;
-                option.setAttribute('styled', 'true');
-                option.innerHTML = `${dot.outerHTML}${category.name}`;
-                
-                select.value = category.id; // Select the new category
-                
-                // Close the modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('newCategoryModal'));
-                modal.hide();
-                
-                // Show success notification
-                showSuccessToast('Category created successfully');
-                
-                // Clear the form
-                form.reset();
-            })
-            .catch(error => {
-                showCategoryError(error.message || 'Failed to create category. Please try again.');
-            });
-        }
-        
-        // Function to show category creation errors
-        function showCategoryError(message) {
-            // Check for existing error message
-            let errorElement = document.querySelector('.category-error-message');
-            
-            // Create error element if it doesn't exist
-            if (!errorElement) {
-                errorElement = document.createElement('div');
-                errorElement.className = 'error-message category-error-message';
-                const modalBody = document.querySelector('#newCategoryModal .modal-body');
-                modalBody.prepend(errorElement);
+                });
             }
             
-            // Set error message
-            errorElement.textContent = message;
-            
-            // Focus the input field
-            document.getElementById('name').focus();
-        }
-        
-        // Function to show success toast
-        function showSuccessToast(message) {
-            const toast = document.createElement('div');
-            toast.className = 'toast success-toast';
-            toast.textContent = message;
-            toast.style.backgroundColor = '#10b981';
-            toast.style.color = 'white';
-            toast.style.position = 'fixed';
-            toast.style.bottom = '20px';
-            toast.style.right = '20px';
-            toast.style.padding = '12px 20px';
-            toast.style.borderRadius = '6px';
-            toast.style.zIndex = '1000';
-            toast.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-            toast.style.transition = 'all 0.3s ease';
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(20px)';
-            
-            document.body.appendChild(toast);
-            
-            // Show the toast
-            setTimeout(() => {
-                toast.style.opacity = '1';
-                toast.style.transform = 'translateY(0)';
-            }, 10);
-            
-            // Remove the toast after 3 seconds
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(20px)';
+            // Function to show category creation success
+            function showSuccess(message) {
+                const toast = document.createElement('div');
+                toast.className = 'toast show';
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+                
+                toast.innerHTML = `
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Success</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                `;
+                
+                document.body.appendChild(toast);
+                
+                // Remove toast after 3 seconds
                 setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, 3000);
-        }
+                    toast.remove();
+                }, 3000);
+            }
+            
+            // Function to show category creation errors
+            function showCategoryError(message) {
+                // Check for existing error message
+                let errorElement = document.querySelector('.category-error-message');
+                
+                // Create error element if it doesn't exist
+                if (!errorElement) {
+                    errorElement = document.createElement('div');
+                    errorElement.className = 'error-message category-error-message';
+                    const modalBody = document.querySelector('#newCategoryModal .modal-body');
+                    modalBody.prepend(errorElement);
+                }
+                
+                // Set error message
+                errorElement.textContent = message;
+                
+                // Focus the input field
+                document.getElementById('name').focus();
+            }
+        });
     </script>
 </body>
 </html> 
