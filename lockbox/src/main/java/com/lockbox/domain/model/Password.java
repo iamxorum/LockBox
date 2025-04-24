@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -70,6 +72,36 @@ public class Password {
         inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new HashSet<>();
+    
+    // Non-persistent metadata for temporary storage
+    @Transient
+    private Map<String, String> metadata = new HashMap<>();
+    
+    /**
+     * Set a metadata value (non-persistent)
+     * 
+     * @param key The metadata key
+     * @param value The metadata value
+     */
+    public void setMetadata(String key, String value) {
+        if (metadata == null) {
+            metadata = new HashMap<>();
+        }
+        metadata.put(key, value);
+    }
+    
+    /**
+     * Get a metadata value (non-persistent)
+     * 
+     * @param key The metadata key
+     * @return The metadata value or null if not found
+     */
+    public String getMetadata(String key) {
+        if (metadata == null) {
+            return null;
+        }
+        return metadata.get(key);
+    }
     
     @PrePersist
     protected void onCreate() {

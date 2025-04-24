@@ -25,6 +25,124 @@
             document.documentElement.setAttribute('data-theme', 'dark');
         }
     </script>
+    <style>
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+
+        .index-header, .index-cell {
+            width: 50px;
+            text-align: center;
+        }
+
+        .title-header, .title-cell {
+            width: 20%;
+        }
+
+        .category-header, .category-cell {
+            width: 15%;
+        }
+
+        .tags-header, .tags-cell {
+            width: 20%;
+        }
+
+        .created-header, .created-cell {
+            width: 15%;
+        }
+
+        .actions-header, .actions-cell {
+            width: 15%;
+            text-align: right;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .tag {
+            background-color: var(--tag-bg);
+            color: var(--tag-text);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .no-tags {
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Additional styles for the action buttons */
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+        
+        .actions .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .actions .btn svg {
+            flex-shrink: 0;
+        }
+        
+        .actions .btn:hover {
+            background-color: var(--hover-bg);
+        }
+        
+        .actions .btn-danger:hover {
+            background-color: rgba(220, 53, 69, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .actions-cell {
+                width: auto;
+            }
+            
+            .actions {
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body class="dashboard-body">
     <div class="sidebar-toggle" id="sidebarToggle">
@@ -215,6 +333,7 @@
                     <table th:if="${!secureNotes.empty}" class="slide-up">
                         <thead>
                             <tr>
+                                <th class="index-header">#</th>
                                 <th class="title-header">Title</th>
                                 <th class="category-header">Category</th>
                                 <th class="tags-header">Tags</th>
@@ -223,12 +342,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="note : ${secureNotes}" 
+                            <tr th:each="note, noteStat : ${secureNotes}" 
                                 th:attr="data-category=${note.categoryId != null ? note.categoryId : ''}, 
-                                         data-created=${#temporals.format(note.createdAt, 'yyyy-MM-dd HH:mm:ss')}">
-                                <td th:text="${note.title}">Title</td>
-                                <td th:text="${note.categoryName}">Category</td>
-                                <td>
+                                         data-created=${#temporals.format(note.createdAt, 'yyyy-MM-dd HH:mm:ss')},
+                                         data-index=${noteStat.count}">
+                                <td class="index-cell" th:text="${noteStat.count}">1</td>
+                                <td class="title-cell" th:text="${note.title}">Title</td>
+                                <td class="category-cell" th:text="${note.categoryName}">Category</td>
+                                <td class="tags-cell">
                                     <div class="tags">
                                         <span th:if="${note.tags != null and !note.tags.isEmpty()}"
                                               th:each="tag : ${note.tags}" 
@@ -238,30 +359,34 @@
                                               class="no-tags">No tags</span>
                                     </div>
                                 </td>
-                                <td th:text="${#temporals.format(note.createdAt, 'yyyy-MM-dd HH:mm')}">Created</td>
-                                <td>
+                                <td class="created-cell" th:text="${#temporals.format(note.createdAt, 'yyyy-MM-dd HH:mm')}">Created</td>
+                                <td class="actions-cell">
                                     <div class="actions">
+                                        <a th:href="@{/secure-notes/view/{id}(id=${note.id})}" 
+                                           class="btn btn-primary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                            View
+                                        </a>
                                         <a th:href="@{/secure-notes/edit/{id}(id=${note.id})}" 
-                                           class="btn btn-sm btn-primary">
+                                           class="btn">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                             </svg>
+                                            Edit
                                         </a>
-                                        <form th:action="@{/secure-notes/delete/{id}(id=${note.id})}" 
-                                              method="POST" 
-                                              style="display: inline;"
-                                              onsubmit="return confirm('Are you sure you want to delete this note?');">
-                                            <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                </svg>
-                                            </button>
-                                        </form>
+                                        <button class="btn btn-danger" th:data-id="${note.id}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                                            </svg>
+                                            Delete
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -350,15 +475,24 @@
                     // Add loading state
                     this.disabled = true;
                     this.innerHTML = `<span class="spinner"></span> Deleting...`;
-
-                    fetch(`/api/v1/secure-notes/${id}`, {
-                        method: 'DELETE',
+                    
+                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                    
+                    // Create form data for POST request
+                    const formData = new FormData();
+                    formData.append('_csrf', csrfToken);
+                    
+                    // Submit delete request
+                    fetch(`/secure-notes/delete/${id}`, {
+                        method: 'POST',
+                        body: formData,
                         headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').getAttribute('content')
+                            [csrfHeader]: csrfToken
                         }
                     })
                     .then(response => {
-                        if (response.ok) {
+                        if (response.ok || response.redirected) {
                             // Add fade-out animation to the row
                             const row = this.closest('tr');
                             row.style.opacity = '0';
@@ -376,7 +510,7 @@
                     })
                     .catch(error => {
                         this.disabled = false;
-                        this.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        this.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <polyline points="3 6 5 6 21 6"></polyline>
                                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                             <line x1="10" y1="11" x2="10" y2="17"></line>
@@ -430,47 +564,72 @@
                 }
                 
                 // Filter rows
+                let visibleCount = 0;
                 if (rows.length > 0) {
                     rows.forEach(row => {
-                        const title = row.cells[0].textContent.toLowerCase();
-                        const content = row.cells[2] ? row.cells[2].textContent.toLowerCase() : '';
+                        const title = row.querySelector('.title-cell').textContent.toLowerCase();
+                        const category = row.querySelector('.category-cell').textContent.toLowerCase();
+                        const tags = row.querySelector('.tags-cell').textContent.toLowerCase();
                         const rowCategory = row.getAttribute('data-category');
                         const rowTags = row.getAttribute('data-tags') ? row.getAttribute('data-tags').split(',') : [];
                         
-                        const matchesSearch = !searchTerm || title.includes(searchTerm) || content.includes(searchTerm);
+                        const matchesSearch = !searchTerm || 
+                            title.includes(searchTerm) || 
+                            category.includes(searchTerm) || 
+                            tags.includes(searchTerm);
+                            
                         const matchesCategory = !categoryId || rowCategory === categoryId;
                         const matchesTag = !tagId || rowTags.includes(tagId);
                         
-                        row.style.display = matchesSearch && matchesCategory && matchesTag ? '' : 'none';
+                        if (matchesSearch && matchesCategory && matchesTag) {
+                            row.style.display = '';
+                            visibleCount++;
+                            // Update the index to maintain visible count
+                            row.querySelector('.index-cell').textContent = visibleCount;
+                        } else {
+                            row.style.display = 'none';
+                        }
                     });
                 }
                 
-                // Sort rows
-                if (table) {
+                // Sort visible rows
+                if (table && rows.length > 0) {
                     const tbody = table.querySelector('tbody');
-                    const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+                    const visibleRows = rows.filter(row => row.style.display !== 'none');
                     
                     visibleRows.sort((a, b) => {
-                        const aTitle = a.cells[0].textContent;
-                        const bTitle = b.cells[0].textContent;
+                        const aTitle = a.querySelector('.title-cell').textContent;
+                        const bTitle = b.querySelector('.title-cell').textContent;
                         const aCreated = a.getAttribute('data-created');
                         const bCreated = b.getAttribute('data-created');
                         
-                        switch (sortOption) {
-                            case 'title':
-                                return aTitle.localeCompare(bTitle);
-                            case 'title-desc':
-                                return bTitle.localeCompare(aTitle);
-                            case 'created':
-                                return new Date(bCreated) - new Date(aCreated);
-                            case 'created-asc':
-                                return new Date(aCreated) - new Date(bCreated);
-                            default:
-                                return 0;
+                        if (sortOption === 'title') {
+                            return aTitle.localeCompare(bTitle);
+                        } else if (sortOption === 'title-desc') {
+                            return bTitle.localeCompare(aTitle);
+                        } else if (sortOption === 'created') {
+                            return new Date(bCreated) - new Date(aCreated);
+                        } else if (sortOption === 'created-asc') {
+                            return new Date(aCreated) - new Date(bCreated);
                         }
+                        return 0;
                     });
                     
-                    visibleRows.forEach(row => tbody.appendChild(row));
+                    // Update DOM order and indices
+                    visibleRows.forEach((row, index) => {
+                        tbody.appendChild(row);
+                        row.querySelector('.index-cell').textContent = index + 1;
+                    });
+                }
+                
+                // Show empty state if no notes are visible
+                const emptyState = document.querySelector('.empty-state');
+                if (emptyState) {
+                    if (rows.length === 0 || rows.every(row => row.style.display === 'none')) {
+                        emptyState.style.display = 'flex';
+                    } else {
+                        emptyState.style.display = 'none';
+                    }
                 }
             }
 

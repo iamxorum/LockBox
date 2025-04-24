@@ -615,3 +615,66 @@ html[data-theme='dark'] .moon-icon {
     padding: 1rem;
   }
 }
+
+/* Tooltip styling */
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+    margin-left: 5px;
+    cursor: help;
+}
+
+.info-icon {
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.info-icon:hover {
+    opacity: 1;
+}
+
+.tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--tooltip-bg, rgba(0, 0, 0, 0.85));
+    color: var(--tooltip-text, white);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    width: 220px;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 100;
+    text-align: center;
+    line-height: 1.5;
+    pointer-events: none;
+}
+
+.tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--tooltip-bg, rgba(0, 0, 0, 0.85)) transparent transparent transparent;
+}
+
+.tooltip-container:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .tooltip {
+    --tooltip-bg: rgba(255, 255, 255, 0.85);
+    --tooltip-text: #111;
+}
+
+[data-theme="dark"] .tooltip::after {
+    border-color: rgba(255, 255, 255, 0.85) transparent transparent transparent;
+}

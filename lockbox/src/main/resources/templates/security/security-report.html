@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LockBox - Security Report</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+    <link rel="icon" type="image/png" th:href="@{/images/favicon.png}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS structure -->
+    <link rel="stylesheet" th:href="@{/css/lockbox-common.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-tables.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-animations.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-dashboard.css}">
+    <style>
+        /* Security report specific styles */
+        .security-score {
+            text-align: center;
+            margin: 3rem auto;
+        }
+        
+        .score-circle-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+        
+        .score-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            background: conic-gradient(var(--score-color) 0%, var(--score-color) var(--score-percent), rgba(229, 231, 235, 0.2) var(--score-percent), rgba(229, 231, 235, 0.2) 100%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            animation: rotateIn 1s ease-out forwards;
+        }
+        
+        .score-circle::before {
+            content: "";
+            position: absolute;
+            width: 170px;
+            height: 170px;
+            top: 15px;
+            left: 15px;
+            border-radius: 50%;
+            background-color: var(--card-bg);
+            background-image: linear-gradient(145deg, var(--card-bg), color-mix(in srgb, var(--card-bg), black 8%));
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .score-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            text-align: center;
+            animation: scaleIn 0.5s ease-out 0.5s forwards;
+            opacity: 0;
+        }
+        
+        .score-value {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--score-text-color, var(--text-primary));
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        
+        .score-label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--score-text-color, var(--text-primary));
+            margin-top: 0.5rem;
+        }
+        
+        /* Status indicator dots */
+        .score-status {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+            gap: 0.5rem;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: rgba(229, 231, 235, 0.5);
+        }
+        
+        .status-dot.active {
+            background-color: var(--score-color);
+        }
+        
+        .status-line {
+            height: 2px;
+            width: 30px;
+            background-color: rgba(229, 231, 235, 0.5);
+            align-self: center;
+        }
+        
+        .status-line.active {
+            background-color: var(--score-color);
+        }
+        
+        /* Define score ranges */
+        .score-critical {
+            --score-color: #dc2626;
+            --score-text-color: #dc2626;
+        }
+        
+        .score-poor {
+            --score-color: #ef4444;
+            --score-text-color: #ef4444;
+        }
+        
+        .score-fair {
+            --score-color: #f59e0b;
+            --score-text-color: #f59e0b;
+        }
+        
+        .score-good {
+            --score-color: #10b981;
+            --score-text-color: #10b981;
+        }
+        
+        .score-excellent {
+            --score-color: #059669;
+            --score-text-color: #059669;
+        }
+        
+        /* Custom animations */
+        @keyframes rotateIn {
+            0% { transform: rotate(-90deg); opacity: 0; }
+            100% { transform: rotate(0deg); opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        /* Report sections styling */
+        .report-section {
+            background-color: var(--card-bg);
+            border-radius: 1rem;
+            padding: 1.75rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            animation: fadeInUp 0.8s ease-out forwards;
+            animation-delay: calc(var(--section-index, 0) * 0.15s + 0.5s);
+            opacity: 0;
+            transform: translateY(20px);
+            max-width: 950px;
+            margin: 0 auto 2rem;
+        }
+        
+        .report-section h2 {
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .section-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--icon-bg, rgba(99, 102, 241, 0.1));
+        }
+        
+        .section-icon svg {
+            stroke: var(--icon-color, #6366f1);
+        }
+        
+        .danger-icon {
+            --icon-bg: rgba(239, 68, 68, 0.1);
+            --icon-color: #ef4444;
+        }
+        
+        .warning-icon {
+            --icon-bg: rgba(245, 158, 11, 0.1);
+            --icon-color: #f59e0b;
+        }
+        
+        .success-icon {
+            --icon-bg: rgba(16, 185, 129, 0.1);
+            --icon-color: #10b981;
+        }
+        
+        .breach-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .breach-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .breach-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .breach-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        
+        .breach-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .breach-domain {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .breach-date {
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .data-classes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .data-class {
+            font-size: 0.75rem;
+            background-color: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        
+        .reused-group {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .reused-group:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .reused-group h3 {
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .reused-accounts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        
+        .account-item {
+            background-color: var(--item-bg, rgba(99, 102, 241, 0.1));
+            color: var(--item-color, #6366f1);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .recommendation {
+            margin: 1.5rem 0;
+            max-width: 100%;
+        }
+        
+        .recommendation-title {
+            font-weight: 600;
+            color: #10b981;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .recommendation-content {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        /* Additional styles for the new password cards */
+        .password-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            max-width: 100%;
+        }
+        
+        .password-card {
+            margin-bottom: 0.75rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-light);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            width: 100%;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .password-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .password-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            border-top-left-radius: 0.75rem;
+            border-bottom-left-radius: 0.75rem;
+            background-color: var(--risk-color, #ef4444);
+        }
+        
+        .password-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: rgba(var(--card-bg-rgb), 0.8);
+            margin-right: 1rem;
+        }
+        
+        .password-details {
+            flex: 1;
+        }
+        
+        .password-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .breach-count, .password-length {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .count-value, .length-value {
+            font-weight: 600;
+            color: var(--risk-color, #ef4444);
+        }
+        
+        .risk-indicator {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .critical-risk {
+            background-color: #dc2626;
+            --risk-color: #dc2626;
+        }
+        
+        .high-risk {
+            background-color: #ef4444;
+            --risk-color: #ef4444;
+        }
+        
+        .medium-risk {
+            background-color: #f59e0b;
+            --risk-color: #f59e0b;
+        }
+        
+        .low-risk {
+            background-color: #84cc16;
+            --risk-color: #84cc16;
+        }
+        
+        .minimal-risk {
+            background-color: #10b981;
+            --risk-color: #10b981;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background-color: #6366f1;
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background-color: #4f46e5;
+        }
+        
+        .generate-password-btn {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+        
+        /* Dark mode adjustments */
+        [data-theme="dark"] .password-card {
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+        
+        [data-theme="dark"] .password-icon {
+            background-color: rgba(30, 41, 59, 0.8);
+        }
+        
+        /* Additional styles for reused passwords section */
+        .reused-groups {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            max-width: 100%;
+        }
+        
+        .reused-group {
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background-color: rgba(var(--card-bg-rgb), 0.5);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .reused-group-header {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .reused-group-header:hover {
+            background-color: rgba(var(--card-bg-rgb), 0.8);
+        }
+        
+        .group-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: rgba(245, 158, 11, 0.1);
+            margin-right: 1rem;
+        }
+        
+        .group-icon svg {
+            color: #f59e0b;
+        }
+        
+        .group-info {
+            flex: 1;
+        }
+        
+        .group-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .group-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+        
+        .group-toggle {
+            transition: transform 0.3s ease;
+        }
+        
+        .group-toggle.active {
+            transform: rotate(180deg);
+        }
+        
+        .group-accounts {
+            padding: 0 1rem 1rem 1rem;
+            display: none;
+        }
+        
+        .group-accounts.active {
+            display: block;
+            animation: slideDown 0.3s ease-out forwards;
+        }
+        
+        .password-stats {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            padding: 0 0 0 1rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+        
+        .risk-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .warning {
+            background-color: #f59e0b;
+        }
+        
+        .accounts-list {
+            background-color: rgba(var(--card-bg-rgb), 0.3);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+        }
+        
+        .account-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease;
+        }
+        
+        .account-item:hover {
+            background-color: rgba(var(--card-bg-rgb), 0.8);
+        }
+        
+        .account-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background-color: rgba(var(--card-bg-rgb), 0.8);
+            margin-right: 0.75rem;
+        }
+        
+        .account-name {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .edit-link {
+            color: var(--text-secondary);
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+        
+        .edit-link:hover {
+            opacity: 1;
+        }
+        
+        .progress-container {
+            margin-top: 1rem;
+        }
+        
+        .progress-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: rgba(229, 231, 235, 0.3);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        
+        .progress-value {
+            height: 100%;
+            background-color: #10b981;
+            border-radius: 9999px;
+            transition: width 1s ease-out;
+        }
+        
+        .progress-text {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            text-align: right;
+        }
+        
+        /* Success section styling */
+        .success-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .success-animation {
+            margin-bottom: 1.5rem;
+        }
+        
+        .success-check {
+            animation: successCheck 1s ease-in-out forwards;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+        }
+        
+        .success-message {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .success-stats {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .stat-pill {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border-radius: 9999px;
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .stat-pill .stat-value {
+            color: #10b981;
+        }
+        
+        .stat-pill .stat-label {
+            color: #10b981;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-top: 0;
+        }
+        
+        /* Animations */
+        @keyframes slideDown {
+            0% { opacity: 0; transform: translateY(-10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes successCheck {
+            0% { stroke-dashoffset: 100; }
+            100% { stroke-dashoffset: 0; }
+        }
+        
+        /* Add these CSS variables to the style section right after the existing styles */
+        :root {
+            --card-bg-rgb: 255, 255, 255;
+        }
+
+        [data-theme="dark"] {
+            --card-bg-rgb: 30, 41, 59;
+        }
+
+        /* Fix the animation styles so content always appears */
+        .report-section {
+            animation-fill-mode: both !important;
+            opacity: 1 !important; /* Ensure content is visible regardless of animation */
+            transform: translateY(0) !important;
+        }
+
+        .slide-up {
+            animation-name: fadeIn !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .debug-button {
+            display: none;
+        }
+
+        /* Sidebar improvements */
+        .sidebar {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-item {
+            border-radius: 8px;
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar .nav-item:hover {
+            background-color: rgba(var(--card-bg-rgb), 0.8);
+        }
+
+        .sidebar .nav-item.active {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+        }
+
+        .sidebar .nav-item.active svg {
+            color: #6366f1;
+        }
+
+        .sidebar-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 6px;
+            border-radius: 9px;
+            background-color: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        /* Add these styles in the style section */
+        .criticality-legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--score-color);
+        }
+
+        .legend-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Make container responsive with sidebar */
+        .container {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+            transition: all 0.3s ease;
+            padding: 2rem;
+        }
+
+        body.sidebar-collapsed .container {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        /* Make the sidebar work with the toggle button */
+        body.sidebar-collapsed .sidebar {
+            transform: translateX(-100%);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            body.sidebar-visible .sidebar {
+                transform: translateX(0);
+            }
+        }
+
+        /* Update the password cards to include risk levels */
+        .password-card[data-risk-level="critical"]::before {
+            background-color: #dc2626;
+        }
+
+        .password-card[data-risk-level="high"]::before {
+            background-color: #ef4444;
+        }
+
+        .password-card[data-risk-level="medium"]::before {
+            background-color: #f59e0b;
+        }
+
+        .password-card[data-risk-level="low"]::before {
+            background-color: #84cc16;
+        }
+
+        .password-card[data-risk-level="minimal"]::before {
+            background-color: #10b981;
+        }
+
+        /* Override container styles to work with main-content-wrapper */
+        .container {
+            margin-left: 0;
+            width: 100%;
+            transition: all 0.3s ease;
+            padding: 2rem;
+        }
+        
+        /* Make sidebar toggle JS match the existing pattern */
+        body.sidebar-open .sidebar {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .main-content-wrapper {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        /* Center content better */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Adjust intro paragraph alignment */
+        .report-section > p {
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Left-align headers and section titles */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .header h1 {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 0;
+            font-size: 1.75rem;
+        }
+
+        /* Action button for report */
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-action:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* Add these CSS styles in the style section */
+        .password-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+        
+        .summary-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            min-width: 180px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card.secure {
+            border-left: 4px solid #10b981;
+        }
+        
+        .stat-card.unsecure {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .stat-card.total {
+            border-left: 4px solid #6366f1;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+        
+        .stat-card.secure .stat-number {
+            color: #10b981;
+        }
+        
+        .stat-card.unsecure .stat-number {
+            color: #ef4444;
+        }
+        
+        .stat-card.total .stat-number {
+            color: #6366f1;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .next-steps {
+            background-color: rgba(var(--card-bg-rgb), 0.7);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+        }
+        
+        .next-steps h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .next-steps p {
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .next-steps .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            gap: 0.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        
+        .next-steps .btn-primary {
+            background-color: #6366f1;
+            color: white;
+        }
+        
+        .next-steps .btn-primary:hover {
+            background-color: #4f46e5;
+        }
+    </style>
+    <!-- Minimal theme setup script - just to handle user preference -->
+    <script>
+        // Set initial theme based on saved preference or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        } else if (systemPrefersDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+</head>
+<body class="dashboard-body">
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <span class="text-gradient">LockBox</span>
+                    </div>
+                    <div class="theme-toggle">
+                        <button id="themeToggleBtn" aria-label="Toggle theme">
+                            <!-- Sun icon for light mode -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun-icon">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <!-- Moon icon for dark mode -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon-icon">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="9"></rect>
+                            <rect x="14" y="3" width="7" height="5"></rect>
+                            <rect x="14" y="12" width="7" height="9"></rect>
+                            <rect x="3" y="16" width="7" height="5"></rect>
+                        </svg>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/passwords" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Passwords</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/tags" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 5H2v7l6.29 6.29c.94.94 2.48.94 3.42 0l3.58-3.58c.94-.94.94-2.48 0-3.42L9 5Z"></path>
+                            <path d="M6 9.01V9"></path>
+                            <path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19"></path>
+                        </svg>
+                        <span>Tags</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/categories" class="nav-link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path>
+                            <path d="M18 14h-8"></path>
+                            <path d="M15 18h-5"></path>
+                            <path d="M10 6h8v4h-8V6Z"></path>
+                        </svg>
+                        <span>Categories</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/security/report" class="nav-link active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                        <span>Security Report</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="logout-container">
+                <a href="/logout" class="nav-link logout">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main content wrapper -->
+        <div class="main-content-wrapper">
+            <div class="sidebar-toggle" id="sidebarToggle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </div>
+            
+            <!-- Background elements -->
+            <div class="bg-pattern"></div>
+            <div class="bg-gradients"></div>
+
+            <!-- Content starts here -->
+            <div class="container">
+                <div class="header">
+                    <h1><span class="icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </span> Security Report</h1>
+                    <a href="/dashboard" class="btn btn-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Back to Dashboard
+                    </a>
+                </div>
+                
+                <!-- Overall Security Score -->
+                <div class="security-score">
+                    <div class="score-circle-container">
+                        <div class="score-circle" 
+                            th:with="scoreClass=${securityScore >= 90 ? 'score-excellent' : (securityScore >= 75 ? 'score-good' : (securityScore >= 50 ? 'score-fair' : (securityScore >= 25 ? 'score-poor' : 'score-critical')))}"
+                            th:classappend="${scoreClass}"
+                            th:style="'--score-percent: ' + ${securityScore} + '%'">
+                        </div>
+                        <div class="score-content">
+                            <div class="score-value" th:text="${securityScore}">75</div>
+                            <div class="score-label" th:text="${securityScore >= 90 ? 'Excellent' : (securityScore >= 75 ? 'Good' : (securityScore >= 50 ? 'Fair' : (securityScore >= 25 ? 'Poor' : 'Critical')))}">Fair</div>
+                        </div>
+                    </div>
+                    <div class="score-status">
+                        <div class="status-dot" th:classappend="${securityScore < 25 ? 'active' : ''}"></div>
+                        <div class="status-line" th:classappend="${securityScore >= 10 && securityScore < 50 ? 'active' : ''}"></div>
+                        <div class="status-dot" th:classappend="${securityScore >= 25 && securityScore < 50 ? 'active' : ''}"></div>
+                        <div class="status-line" th:classappend="${securityScore >= 25 && securityScore < 75 ? 'active' : ''}"></div>
+                        <div class="status-dot" th:classappend="${securityScore >= 50 && securityScore < 75 ? 'active' : ''}"></div>
+                        <div class="status-line" th:classappend="${securityScore >= 50 && securityScore < 90 ? 'active' : ''}"></div>
+                        <div class="status-dot" th:classappend="${securityScore >= 75 && securityScore < 90 ? 'active' : ''}"></div>
+                        <div class="status-line" th:classappend="${securityScore >= 75 ? 'active' : ''}"></div>
+                        <div class="status-dot" th:classappend="${securityScore >= 90 ? 'active' : ''}"></div>
+                    </div>
+                    
+                    <!-- Legend for criticality levels -->
+                    <div class="criticality-legend">
+                        <div class="legend-item">
+                            <span class="legend-dot score-critical"></span>
+                            <span class="legend-label">Critical (0-24)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot score-poor"></span>
+                            <span class="legend-label">Poor (25-49)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot score-fair"></span>
+                            <span class="legend-label">Fair (50-74)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot score-good"></span>
+                            <span class="legend-label">Good (75-89)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot score-excellent"></span>
+                            <span class="legend-label">Excellent (90-100)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Password Summary Section -->
+                <div class="report-section slide-up" style="--section-index: 0">
+                    <h2>
+                        <span class="section-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                        </span>
+                        Your Password Summary
+                    </h2>
+                    
+                    <div class="password-summary">
+                        <div class="summary-stats">
+                            <div class="stat-card secure">
+                                <div class="stat-number" th:with="overlapCount=${pwnedPasswords.?[passwordValue != null && passwordValue.length() < 8].size()}" 
+                                     th:text="${passwordCount > 0 ? passwordCount - (weakPasswords.size() + pwnedPasswords.size() - overlapCount) : 0}">0</div>
+                                <div class="stat-label">Secure Passwords</div>
+                            </div>
+                            
+                            <div class="stat-card unsecure">
+                                <div class="stat-number" th:with="overlapCount=${pwnedPasswords.?[passwordValue != null && passwordValue.length() < 8].size()}" 
+                                     th:text="${weakPasswords.size() + pwnedPasswords.size() - overlapCount}">0</div>
+                                <div class="stat-label">Unsecure Passwords</div>
+                            </div>
+                            
+                            <div class="stat-card total">
+                                <div class="stat-number" th:text="${passwordCount}">0</div>
+                                <div class="stat-label">Total Passwords</div>
+                            </div>
+                        </div>
+                        
+                        <div class="next-steps">
+                            <h3>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                                </svg>
+                                Next Steps
+                            </h3>
+                            <p>Improving your password security is an ongoing process. Add more secure passwords and replace compromised or weak ones to improve your security score.</p>
+                            <a href="/passwords" class="btn btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                Manage Your Passwords
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pwned Passwords Section -->
+                <div th:if="${pwnedPasswords != null && !pwnedPasswords.empty}" class="report-section slide-up" style="--section-index: 1">
+                    <h2>
+                        <span class="section-icon danger-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </span>
+                        Compromised Passwords
+                    </h2>
+                    <p>We found <strong th:text="${pwnedPasswords.size()}">3</strong> passwords that have appeared in data breaches:</p>
+                    
+                    <div class="password-list">
+                        <div th:each="password : ${pwnedPasswords}" class="password-card" th:data-risk-level="${password.getMetadata('riskLevel')}">
+                            <div class="password-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </div>
+                            <div class="password-details">
+                                <div class="password-title" th:text="${password.title}">Account</div>
+                                <div class="breach-count">
+                                    <span class="count-label">Found in </span>
+                                    <span class="count-value" th:text="${password.getMetadata('pwnedCount')}">21302061</span>
+                                    <span class="count-label"> data breaches</span>
+                                </div>
+                            </div>
+                            <div class="risk-indicator" th:classappend="${password.getMetadata('riskLevel') + '-risk'}">
+                                <span th:text="${#strings.capitalize(password.getMetadata('riskLevel')) + ' Risk'}">High Risk</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            Recommendation
+                        </div>
+                        <div class="recommendation-content">
+                            <p>These passwords have been exposed in data breaches and should be changed immediately. Hackers often use these known passwords in attacks.</p>
+                            <div class="action-buttons">
+                                <a href="/passwords" class="btn btn-primary generate-password-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                                    </svg>
+                                    Generate Strong Passwords
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Weak Passwords Section -->
+                <div th:if="${weakPasswords != null && !weakPasswords.empty}" class="report-section slide-up" style="--section-index: 2">
+                    <h2>
+                        <span class="section-icon danger-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M13.73 21a9.97 9.97 0 0 1-10.68-9.3c-.31-3.3.94-6.6 3.33-8.83C9.16.55 13.88.29 17 2.1"></path>
+                                <path d="M14 2.1a11.2 11.2 0 0 1 8.71 10.2 16.2 16.2 0 0 1-.89 5.61"></path>
+                                <path d="M8 11V8"></path>
+                                <path d="M16 11V8"></path>
+                                <path d="M12 11v3"></path>
+                                <path d="M12 17h.01"></path>
+                                <path d="M18 15l-6-6"></path>
+                            </svg>
+                        </span>
+                        Weak Passwords
+                    </h2>
+                    <p>We found <strong th:text="${weakPasswords.size()}">3</strong> passwords that are considered weak (less than 8 characters):</p>
+                    
+                    <div class="password-list">
+                        <div th:each="password : ${weakPasswords}" class="password-card">
+                            <div class="password-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </div>
+                            <div class="password-details">
+                                <div class="password-title" th:text="${password.title}">Account</div>
+                                <div class="password-length">
+                                    <span class="length-label">Password length: </span>
+                                    <span class="length-value" th:text="${password.passwordValue.length()}">6</span>
+                                    <span class="length-label"> characters</span>
+                                </div>
+                            </div>
+                            <div class="risk-indicator medium-risk">
+                                <span>Medium Risk</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            Recommendation
+                        </div>
+                        <div class="recommendation-content">
+                            <p>Use passwords that are at least 12 characters long and include a mix of uppercase and lowercase letters, numbers, and special characters.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reused Passwords Section -->
+                <div th:if="${reusedPasswordGroups != null && !reusedPasswordGroups.empty}" class="report-section slide-up" style="--section-index: 3">
+                    <h2>
+                        <span class="section-icon warning-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </span>
+                        Reused Passwords
+                    </h2>
+                    <p>We found <strong th:text="${reusedPasswordGroups.size()}">2</strong> passwords that are being reused across multiple accounts:</p>
+                    
+                    <div class="reused-groups">
+                        <div th:each="group, groupStat : ${reusedPasswordGroups}" class="reused-group" th:data-group="${'group-' + groupStat.index}">
+                            <div class="reused-group-header" th:onclick="'toggleGroup(\'group-' + ${groupStat.index} + '\')'">
+                                <div class="group-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                </div>
+                                <div class="group-info">
+                                    <div class="group-title">Password used across <span th:text="${group.value.size()}">3</span> accounts</div>
+                                    <div class="group-subtitle">Click to view affected accounts</div>
+                                </div>
+                                <div class="group-toggle">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="group-accounts">
+                                <div class="password-stats">
+                                    <div class="stat-item">
+                                        <div class="stat-value" th:text="${group.value.size()}">3</div>
+                                        <div class="stat-label">Accounts</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="risk-badge warning">Medium Risk</div>
+                                        <div class="stat-label">Security Risk</div>
+                                    </div>
+                                </div>
+                                <div class="accounts-list">
+                                    <div th:each="password : ${group.value}" class="account-item">
+                                        <div class="account-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                            </svg>
+                                        </div>
+                                        <span class="account-name" th:text="${password.title}">Account</span>
+                                        <a th:href="@{'/passwords/edit/' + ${password.id}}" class="edit-link">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            Recommendation
+                        </div>
+                        <div class="recommendation-content">
+                            <p>Use a unique password for each account to prevent security breaches from affecting multiple accounts.</p>
+                            <div class="progress-container">
+                                <div class="progress-label">Password uniqueness</div>
+                                <div class="progress-bar">
+                                    <div class="progress-value" th:style="'width: ' + (100 - (${reusedPasswordGroups.size()} * 100 / ${passwordCount ?: 1})) + '%'"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span th:text="${passwordCount - reusedPasswordGroups.size()}">8</span>
+                                    <span> / </span>
+                                    <span th:text="${passwordCount}">10</span>
+                                    <span> unique passwords</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- No Issues Found Section -->
+                <div th:if="${(weakPasswords == null || weakPasswords.empty) && 
+                             (reusedPasswordGroups == null || reusedPasswordGroups.empty) && 
+                             (pwnedPasswords == null || pwnedPasswords.empty)}" class="report-section slide-up" style="--section-index: 1" id="no-issues-section">
+                    <h2>
+                        <span class="section-icon success-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </span>
+                        No Security Issues Found
+                    </h2>
+                    <div class="success-content">
+                        <div class="success-animation">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="success-check">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <p class="success-message">Great job! We didn't find any security issues with your passwords. Keep up the good work!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Handle sidebar toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const body = document.body;
+            
+            // Handle sidebar toggle
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    body.classList.toggle('sidebar-open');
+                });
+            }
+            
+            // Handle theme toggle
+            const themeToggleBtn = document.getElementById('themeToggleBtn');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                });
+            }
+        });
+        
+        // Add variable to track the currently open group
+        let currentOpenGroup = null;
+        
+        // Function to toggle group visibility
+        function toggleGroup(groupId) {
+            const group = document.querySelector(`[data-group="${groupId}"]`);
+            const accounts = group.querySelector('.group-accounts');
+            const toggle = group.querySelector('.group-toggle');
+            
+            // If clicking on the already open group, close it
+            if (currentOpenGroup === groupId) {
+                accounts.classList.remove('active');
+                toggle.classList.remove('active');
+                currentOpenGroup = null;
+                return;
+            }
+            
+            // Close currently open group if there is one
+            if (currentOpenGroup) {
+                const currentGroup = document.querySelector(`[data-group="${currentOpenGroup}"]`);
+                const currentAccounts = currentGroup.querySelector('.group-accounts');
+                const currentToggle = currentGroup.querySelector('.group-toggle');
+                
+                currentAccounts.classList.remove('active');
+                currentToggle.classList.remove('active');
+            }
+            
+            // Open clicked group
+            accounts.classList.add('active');
+            toggle.classList.add('active');
+            currentOpenGroup = groupId;
+        }
+        
+        // Function to animate progress bars when they come into view
+        function animateProgressBarsOnScroll() {
+            const progressBars = document.querySelectorAll('.progress-value');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Add a class to trigger the animation
+                        entry.target.classList.add('animate');
+                        // Unobserve after animating
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.2 });
+            
+            progressBars.forEach(bar => {
+                observer.observe(bar);
+            });
+        }
+        
+        // Initialize animations when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            animateProgressBarsOnScroll();
+        });
+    </script>
+    
+    <script>
+        window.addEventListener('load', function() {
+            console.log('Security report loaded');
+            
+            // Force all sections to be visible
+            setTimeout(function() {
+                document.querySelectorAll('.report-section').forEach(function(section) {
+                    section.style.display = 'block';
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                });
+                
+                // Also ensure all group accounts are visible if needed
+                document.querySelectorAll('.group-accounts').forEach(function(accounts) {
+                    if (accounts.classList.contains('active')) {
+                        accounts.style.display = 'block';
+                        accounts.style.opacity = '1';
+                    }
+                });
+                
+                console.log('Visibility fix applied');
+            }, 300);
+        });
+    </script>
+
+    <!-- Script to remove specific buttons by text content -->
+    <script>
+        window.addEventListener('load', function() {
+            // Find and hide all buttons with "Show Security Details" text
+            document.querySelectorAll('button, a').forEach(function(elem) {
+                if (elem.textContent.includes('Show Security Details')) {
+                    elem.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -5,6 +5,7 @@ import com.lockbox.domain.model.Password;
 import com.lockbox.domain.model.SecureNote;
 import com.lockbox.domain.model.User;
 import com.lockbox.domain.service.AuditLogService;
+import com.lockbox.domain.service.BreachDetectionService;
 import com.lockbox.domain.service.PasswordService;
 import com.lockbox.domain.service.SecureNoteService;
 import com.lockbox.domain.service.UserService;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 @Controller
 @RequestMapping("/dashboard")
@@ -28,17 +30,20 @@ public class DashboardController {
     private final PasswordService passwordService;
     private final SecureNoteService secureNoteService;
     private final AuditLogService auditLogService;
+    private final BreachDetectionService breachDetectionService;
     private static final int RECENT_ACTIVITY_LIMIT = 5;
 
     @Autowired
     public DashboardController(UserService userService, 
                               PasswordService passwordService,
                               SecureNoteService secureNoteService,
-                              AuditLogService auditLogService) {
+                              AuditLogService auditLogService,
+                              BreachDetectionService breachDetectionService) {
         this.userService = userService;
         this.passwordService = passwordService;
         this.secureNoteService = secureNoteService;
         this.auditLogService = auditLogService;
+        this.breachDetectionService = breachDetectionService;
     }
 
     @GetMapping
@@ -64,6 +69,19 @@ public class DashboardController {
         Map<String, Object> securityStats = new HashMap<>();
         securityStats.put("weakPasswordCount", countWeakPasswords(passwords));
         securityStats.put("reusedPasswordCount", countReusedPasswords(passwords));
+        
+        // Check for compromised passwords
+        List<Password> pwnedPasswords = new ArrayList<>();
+        for (Password password : passwords) {
+            if (password.getPasswordValue() != null && !password.getPasswordValue().isBlank()) {
+                int occurrences = breachDetectionService.checkPasswordPwned(password.getPasswordValue());
+                if (occurrences > 0) {
+                    pwnedPasswords.add(password);
+                }
+            }
+        }
+        securityStats.put("pwnedPasswordCount", pwnedPasswords.size());
+        
         model.addAttribute("securityStats", securityStats);
         
         return "dashboard/dashboard";

@@ -215,18 +215,38 @@
                                 </svg>
                             </div>
                         </div>
+                        
+                        <!-- Weak Passwords -->
                         <div th:if="${securityStats?.weakPasswordCount > 0}" class="stat-value danger" th:text="${securityStats.weakPasswordCount}">0</div>
                         <div th:if="${securityStats?.weakPasswordCount > 0}" class="stat-label danger">Weak Passwords</div>
                         
+                        <!-- Reused Passwords -->
                         <div th:if="${securityStats?.reusedPasswordCount > 0}" class="stat-value warning" th:text="${securityStats.reusedPasswordCount}">0</div>
                         <div th:if="${securityStats?.reusedPasswordCount > 0}" class="stat-label warning">Reused Passwords</div>
                         
-                        <div th:if="${securityStats?.weakPasswordCount == 0 && securityStats?.reusedPasswordCount == 0}" class="stat-value success">
+                        <!-- Pwned Passwords -->
+                        <div th:if="${securityStats?.pwnedPasswordCount > 0}" class="stat-value danger" th:text="${securityStats.pwnedPasswordCount}">0</div>
+                        <div th:if="${securityStats?.pwnedPasswordCount > 0}" class="stat-label danger">
+                            Compromised Passwords
+                            <div class="tooltip-container">
+                                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                                <div class="tooltip">
+                                    These passwords have been found in known data breaches. They should be changed immediately.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- All clear notification -->
+                        <div th:if="${securityStats?.weakPasswordCount == 0 && securityStats?.reusedPasswordCount == 0 && securityStats?.pwnedPasswordCount == 0}" class="stat-value success">
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="svg-draw">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                         </div>
-                        <div th:if="${securityStats?.weakPasswordCount == 0 && securityStats?.reusedPasswordCount == 0}" class="stat-label success">No security issues found</div>
+                        <div th:if="${securityStats?.weakPasswordCount == 0 && securityStats?.reusedPasswordCount == 0 && securityStats?.pwnedPasswordCount == 0}" class="stat-label success">No security issues found</div>
                         
                         <a href="/security-report" class="view-btn btn-shine">
                             <span>View Security Report</span>

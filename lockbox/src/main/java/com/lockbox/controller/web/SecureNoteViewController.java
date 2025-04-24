@@ -255,6 +255,57 @@ public class SecureNoteViewController {
         return "redirect:/secure-notes";
     }
 
+    @GetMapping("/view/{id}")
+    public String viewNote(@PathVariable Long id, Model model, Authentication authentication,
+                         RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.findByUsername(authentication.getName())
+                    .orElseThrow(() -> new SecurityException("User not found"));
+            
+            // Get the note by ID
+            SecureNote note = secureNoteService.findByIdWithTags(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Note not found"));
+            
+            if (!note.getUser().getId().equals(user.getId())) {
+                throw new SecurityException("Access denied");
+            }
+            
+            // Force initialization of category to prevent lazy loading issues
+            if (note.getCategory() != null) {
+                Category category = categoryService.findById(note.getCategory().getId())
+                        .orElse(null);
+                if (category != null) {
+                    // Set the initialized category back to the note
+                    note.setCategory(category);
+                }
+            }
+            
+            SecureNoteDto noteDto = secureNoteMapper.toDto(note);
+            
+            // Add category name if available
+            if (note.getCategory() != null) {
+                noteDto.setCategoryName(note.getCategory().getName());
+            }
+            
+            // Map tags
+            noteDto.setTags(note.getTags().stream()
+                    .map(tagMapper::toDto)
+                    .collect(Collectors.toSet()));
+            
+            model.addAttribute("secureNote", noteDto);
+            model.addAttribute("currentUserId", user.getId());
+            
+            // Log the view action
+            auditLogService.createAuditLog(user.getId(), "VIEW", "SecureNote", id, "Note viewed");
+            
+            return "secure-notes/secure-note-view";
+        } catch (Exception e) {
+            logger.error("Error viewing note", e);
+            redirectAttributes.addFlashAttribute("error", "Error viewing secure note: " + e.getMessage());
+            return "redirect:/secure-notes";
+        }
+    }
+
     @ExceptionHandler(SecurityException.class)
     public String handleSecurityException(SecurityException e, RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
