@@ -7,4 +7,20 @@ INSERT INTO passwords (title, username, password_value, url, notes, user_id, cat
 ('Twitter', 'john_tweets', 'Tw1tt3rP@ss!', 'https://twitter.com', 'Personal Twitter account', 2, 3, CURRENT_TIMESTAMP),
 ('LinkedIn', 'johndoe', 'L1nk3dInP@ss!', 'https://linkedin.com', 'Professional networking', 2, 1, CURRENT_TIMESTAMP),
 ('Amazon', 'john.doe@example.com', 'Am@z0nP@ss!', 'https://amazon.com', 'Shopping account', 2, 2, CURRENT_TIMESTAMP),
-('Coursera', 'alice.b@example.com', 'C0urs3raP@ss!', 'https://coursera.org', 'Online learning platform', 3, NULL, CURRENT_TIMESTAMP); 
+('Coursera', 'alice.b@example.com', 'C0urs3raP@ss!', 'https://coursera.org', 'Online learning platform', 3, NULL, CURRENT_TIMESTAMP),
+-- New passwords with some unsecure ones
+('Facebook', 'john.doe', 'password123', 'https://facebook.com', 'Personal Facebook account - CHANGE THIS WEAK PASSWORD', 2, 3, CURRENT_TIMESTAMP),
+('Instagram', 'john.doe.photos', 'instagram', 'https://instagram.com', 'Photo sharing - INSECURE!', 2, 3, CURRENT_TIMESTAMP),
+('Dropbox', 'johndoe@example.com', 'abc123', 'https://dropbox.com', 'File storage - Very weak password', 2, 2, CURRENT_TIMESTAMP),
+('Reddit', 'john_reddit', '12345678', 'https://reddit.com', 'Social media forum - Too simple', 2, 3, CURRENT_TIMESTAMP),
+('Spotify', 'johndoe', 'johndoe1990', 'https://spotify.com', 'Music streaming - Contains personal info', 2, 2, CURRENT_TIMESTAMP),
+('Office 365', 'john.doe@work.com', 'Office@2023!', 'https://office.com', 'Work email and tools', 2, 1, CURRENT_TIMESTAMP),
+('Apple ID', 'john.doe@icloud.com', 'Apple&Cloud#54', 'https://apple.com', 'Apple services and iCloud', 2, 2, CURRENT_TIMESTAMP),
+('PayPal', 'john.doe@example.com', 'P@yP@l$3cur3', 'https://paypal.com', 'Online payments', 2, 4, CURRENT_TIMESTAMP),
+('Steam', 'johngamer', 'gameon2023', 'https://steampowered.com', 'Gaming platform', 2, NULL, CURRENT_TIMESTAMP),
+('Airbnb', 'john.d', 'Travel2023!', 'https://airbnb.com', 'Travel accommodations', 2, 2, CURRENT_TIMESTAMP),
+('Bank of America', 'aliceb', 'BankSafety!2023', 'https://bankofamerica.com', 'Secondary bank account', 3, 4, CURRENT_TIMESTAMP),
+('Chase Bank', 'alicebrown', 'Moneysafe$2023', 'https://chase.com', 'Credit card account', 3, 4, CURRENT_TIMESTAMP),
+('Twitter', 'alice_tweets', 'qwerty', 'https://twitter.com', 'Personal account - VERY INSECURE', 3, NULL, CURRENT_TIMESTAMP),
+('Amazon', 'alice.brown@example.com', 'aliceamazon', 'https://amazon.com', 'Shopping - weak password', 3, NULL, CURRENT_TIMESTAMP),
+('Zoom', 'alice.b@work.com', 'MeetingS3cure!', 'https://zoom.us', 'Work video conferencing', 3, 4, CURRENT_TIMESTAMP); 
