@@ -150,11 +150,18 @@ public class PasswordViewController {
                 // Update tags
                 password.getTags().clear();
                 if (passwordDto.getTagIds() != null && !passwordDto.getTagIds().isEmpty()) {
+                    logger.debug("Processing {} tags for password", passwordDto.getTagIds().size());
                     Set<Tag> tags = passwordDto.getTagIds().stream()
-                        .map(tagId -> tagService.findById(tagId)
-                            .orElseThrow(() -> new IllegalArgumentException("Tag not found with ID: " + tagId)))
+                        .map(tagId -> {
+                            logger.debug("Looking up tag with ID: {}", tagId);
+                            return tagService.findById(tagId)
+                                .orElseThrow(() -> new IllegalArgumentException("Tag not found with ID: " + tagId));
+                        })
                         .collect(Collectors.toSet());
+                    logger.debug("Found {} valid tags to associate with password", tags.size());
                     password.setTags(tags);
+                } else {
+                    logger.debug("No tags provided for password");
                 }
             }
             
@@ -275,6 +282,16 @@ public class PasswordViewController {
             
             // Convert to DTO
             PasswordCreationDto passwordDto = passwordMapper.toCreationDto(password);
+            
+            // Explicitly set tagIds for the form
+            if (password.getTags() != null && !password.getTags().isEmpty()) {
+                List<Long> tagIds = password.getTags().stream()
+                    .map(Tag::getId)
+                    .collect(Collectors.toList());
+                passwordDto.setTagIds(tagIds);
+                
+                logger.debug("Setting {} tags for password edit form", tagIds.size());
+            }
             
             // Add categories to the form
             List<Category> categories = categoryService.findByUserId(authenticatedUser.getId());
