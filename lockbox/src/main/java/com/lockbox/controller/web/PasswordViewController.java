@@ -5,6 +5,7 @@ import com.lockbox.domain.model.Password;
 import com.lockbox.domain.model.Tag;
 import com.lockbox.domain.model.User;
 import com.lockbox.domain.service.AuditLogService;
+import com.lockbox.domain.service.BreachDetectionService;
 import com.lockbox.domain.service.CategoryService;
 import com.lockbox.domain.service.PasswordService;
 import com.lockbox.domain.service.TagService;
@@ -27,9 +28,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 @Controller
 @RequestMapping("/passwords")
@@ -42,17 +45,20 @@ public class PasswordViewController {
     private final CategoryService categoryService;
     private final TagService tagService;
     private final PasswordMapper passwordMapper;
+    private final BreachDetectionService breachDetectionService;
 
     @Autowired
     public PasswordViewController(PasswordService passwordService, UserService userService, 
                                 AuditLogService auditLogService, CategoryService categoryService,
-                                TagService tagService, PasswordMapper passwordMapper) {
+                                TagService tagService, PasswordMapper passwordMapper,
+                                BreachDetectionService breachDetectionService) {
         this.passwordService = passwordService;
         this.userService = userService;
         this.auditLogService = auditLogService;
         this.categoryService = categoryService;
         this.tagService = tagService;
         this.passwordMapper = passwordMapper;
+        this.breachDetectionService = breachDetectionService;
     }
 
     @GetMapping("/new")
@@ -290,6 +296,50 @@ public class PasswordViewController {
         
         // Get user's passwords
         List<Password> passwords = passwordService.findByUserId(user.getId());
+        
+        // Use a map to cache already checked passwords to avoid duplicate API calls
+        Map<String, Integer> checkedPasswords = new HashMap<>();
+        
+        // Assess security for each password
+        for (Password password : passwords) {
+            // First check if password has been compromised
+            if (password.getPasswordValue() != null && !password.getPasswordValue().isBlank()) {
+                int occurrences;
+                
+                // Check if we've already checked this password before (avoid duplicate API calls)
+                if (checkedPasswords.containsKey(password.getPasswordValue())) {
+                    occurrences = checkedPasswords.get(password.getPasswordValue());
+                } else {
+                    // New password, check with API
+                    occurrences = breachDetectionService.checkPasswordPwned(password.getPasswordValue());
+                    // Cache the result
+                    checkedPasswords.put(password.getPasswordValue(), occurrences);
+                }
+                
+                if (occurrences > 0) {
+                    password.setMetadata("pwnedCount", String.valueOf(occurrences));
+                    
+                    // Determine risk level based on number of occurrences
+                    String riskLevel;
+                    if (occurrences > 1000000) {
+                        riskLevel = "critical";
+                    } else if (occurrences > 100000) {
+                        riskLevel = "high";
+                    } else if (occurrences > 10000) {
+                        riskLevel = "medium";
+                    } else if (occurrences > 1000) {
+                        riskLevel = "low";
+                    } else {
+                        riskLevel = "minimal";
+                    }
+                    password.setMetadata("riskLevel", riskLevel);
+                }
+            }
+            
+            // Then assess overall security status
+            assessPasswordSecurity(password);
+        }
+        
         model.addAttribute("passwords", passwords);
         
         // Get categories for filtering
@@ -297,6 +347,57 @@ public class PasswordViewController {
         model.addAttribute("categories", categories);
         
         return "passwords/password-list";
+    }
+
+    /**
+     * Assesses the security of a password and adds metadata for display
+     * 
+     * @param password the password to assess
+     */
+    private void assessPasswordSecurity(Password password) {
+        // Skip assessment for null or empty passwords
+        if (password.getPasswordValue() == null || password.getPasswordValue().isEmpty()) {
+            password.setMetadata("securityStatus", "unknown");
+            return;
+        }
+        
+        // Check for compromised password (already set by other checks)
+        if (password.getMetadata("pwnedCount") != null) {
+            int pwnedCount = Integer.parseInt(password.getMetadata("pwnedCount"));
+            if (pwnedCount > 0) {
+                // Set security status as critical (this overrides other checks)
+                password.setMetadata("securityStatus", "danger");
+                password.setMetadata("securityMessage", "Password found in data breaches");
+                return;
+            }
+        }
+        
+        // Assess password length and complexity
+        String passwordValue = password.getPasswordValue();
+        
+        // Check password length
+        if (passwordValue.length() < 8) {
+            password.setMetadata("securityStatus", "warning");
+            password.setMetadata("securityMessage", "Password is too short (less than 8 characters)");
+            return;
+        }
+        
+        // Check password complexity (same logic as checkPasswordStrength)
+        int categories = 0;
+        if (passwordValue.matches(".*[a-z].*")) categories++; // lowercase
+        if (passwordValue.matches(".*[A-Z].*")) categories++; // uppercase
+        if (passwordValue.matches(".*[0-9].*")) categories++; // digits
+        if (passwordValue.matches(".*[^a-zA-Z0-9].*")) categories++; // special chars
+        
+        if (categories < 3) {
+            password.setMetadata("securityStatus", "warning");
+            password.setMetadata("securityMessage", "Password lacks complexity");
+            return;
+        }
+        
+        // If we get here, the password is considered secure
+        password.setMetadata("securityStatus", "secure");
+        password.setMetadata("securityMessage", "Password is secure");
     }
 
     @ExceptionHandler(SecurityException.class)
