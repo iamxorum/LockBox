@@ -47,6 +47,35 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Tag> tags = new HashSet<>();
     
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<UserRole> roles = new HashSet<>();
+    
+    /**
+     * Adds a role to the user
+     * @param roleName the name of the role to add
+     */
+    public void addRole(String roleName) {
+        UserRole role = new UserRole(roleName, this);
+        roles.add(role);
+    }
+    
+    /**
+     * Checks if the user has a specific role
+     * @param roleName the role name to check
+     * @return true if the user has the role, false otherwise
+     */
+    public boolean hasRole(String roleName) {
+        return roles.stream().anyMatch(role -> role.getName().equals(roleName));
+    }
+    
+    /**
+     * Checks if the user is an admin
+     * @return true if the user has the ADMIN role, false otherwise
+     */
+    public boolean isAdmin() {
+        return hasRole("ADMIN");
+    }
+    
     /**
      * Custom toString implementation to avoid lazy loading issues
      */

@@ -428,4 +428,21 @@ input[type="color"]::-moz-color-swatch {
 #category option:not(:first-child) {
   color: var(--text-primary);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* Password visibility toggle icon states */
+.password-toggle .eye-icon {
+  display: block;
+}
+
+.password-toggle .eye-off-icon {
+  display: none;
+}
+
+.show-password .eye-icon {
+  display: none;
+}
+
+.show-password .eye-off-icon {
+  display: block;
 } 

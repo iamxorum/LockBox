@@ -6,8 +6,6 @@ import com.lockbox.domain.service.AuditLogService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.AbstractAuthenticationEvent;
@@ -27,7 +25,6 @@ import java.util.Optional;
 public class SecurityEventListener {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityEventListener.class);
-    private static final Marker AUDIT = MarkerFactory.getMarker("AUDIT");
     
     private final AuditLogService auditLogService;
     private final UserRepository userRepository;
@@ -56,13 +53,13 @@ public class SecurityEventListener {
                     try {
                         auditLogService.createAuditLog(userId, action, entityType, entityId, details);
                     } catch (Exception e) {
-                        log.error(AUDIT, "Failed to store audit log: {}", e.getMessage(), e);
+                        log.error("Failed to store audit log: {}", e.getMessage(), e);
                         status.setRollbackOnly();
                     }
                 }
             });
         } catch (Exception e) {
-            log.error(AUDIT, "Transaction error storing audit log: {}", e.getMessage(), e);
+            log.error("Transaction error storing audit log: {}", e.getMessage(), e);
         }
     }
     
@@ -71,7 +68,7 @@ public class SecurityEventListener {
         String remoteAddress = extractRemoteAddress(success);
         String username = success.getAuthentication().getName();
         
-        log.info(AUDIT, "🔓 Login success - User: {}, IP: {}, Time: {}", 
+        log.info("🔓 Login success - User: {}, IP: {}, Time: {}", 
                 username, 
                 remoteAddress,
                 System.currentTimeMillis());
@@ -88,7 +85,7 @@ public class SecurityEventListener {
                 );
             }
         } catch (Exception e) {
-            log.error(AUDIT, "Failed to store login success audit log: {}", e.getMessage(), e);
+            log.error("Failed to store login success audit log: {}", e.getMessage(), e);
         }
     }
     
@@ -97,7 +94,7 @@ public class SecurityEventListener {
         String remoteAddress = extractRemoteAddress(failures);
         String username = failures.getAuthentication().getName();
         
-        log.warn(AUDIT, "🔒 Login failure - User: {}, IP: {}, Time: {}, Reason: Bad credentials", 
+        log.warn("🔒 Login failure - User: {}, IP: {}, Time: {}, Reason: Bad credentials", 
                 username, 
                 remoteAddress,
                 System.currentTimeMillis());
@@ -127,7 +124,7 @@ public class SecurityEventListener {
                 }
             }
         } catch (Exception e) {
-            log.error(AUDIT, "Failed to store login failure audit log: {}", e.getMessage(), e);
+            log.error("Failed to store login failure audit log: {}", e.getMessage(), e);
         }
     }
     
@@ -136,7 +133,7 @@ public class SecurityEventListener {
         String remoteAddress = extractRemoteAddress(event);
         String username = event.getAuthentication().getName();
         
-        log.info(AUDIT, "👋 Logout - User: {}, IP: {}, Time: {}", 
+        log.info("👋 Logout - User: {}, IP: {}, Time: {}", 
                 username, 
                 remoteAddress, 
                 System.currentTimeMillis());
@@ -153,7 +150,7 @@ public class SecurityEventListener {
                 );
             }
         } catch (Exception e) {
-            log.error(AUDIT, "Failed to store logout audit log: {}", e.getMessage(), e);
+            log.error("Failed to store logout audit log: {}", e.getMessage(), e);
         }
     }
     

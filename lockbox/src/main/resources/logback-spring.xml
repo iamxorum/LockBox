@@ -41,13 +41,6 @@
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
         </encoder>
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
-                <marker>API_SUCCESS</marker>
-            </evaluator>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
     </appender>
 
     <!-- Failed API calls appender -->
@@ -62,55 +55,6 @@
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
         </encoder>
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
-                <marker>API_FAILED</marker>
-            </evaluator>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
-    <!-- Audit log appender -->
-    <appender name="AUDIT_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/lockbox.audit.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/lockbox.audit.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>30</maxHistory>
-            <totalSizeCap>100MB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
-                <marker>AUDIT</marker>
-            </evaluator>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
-    <!-- Service log appender -->
-    <appender name="SERVICE_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/lockbox.service.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/lockbox.service.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>10</maxHistory>
-            <totalSizeCap>100MB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
-                <marker>SERVICE</marker>
-            </evaluator>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
     </appender>
 
     <!-- Error log appender -->
@@ -130,49 +74,22 @@
         </encoder>
     </appender>
 
-    <!-- Performance log appender -->
-    <appender name="PERFORMANCE_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/lockbox.performance.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/lockbox.performance.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>10</maxHistory>
-            <totalSizeCap>100MB</totalSizeCap>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
-        </encoder>
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
-                <marker>PERFORMANCE</marker>
-            </evaluator>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
     <!-- Application logs at debug level -->
     <logger name="com.lockbox" level="DEBUG" />
-    
-    <!-- Aspect logs at debug level -->
-    <logger name="com.lockbox.aspect" level="DEBUG" />
 
     <!-- Spring Framework logs -->
     <logger name="org.springframework" level="INFO" />
     <logger name="org.springframework.web" level="INFO" />
     <logger name="org.springframework.security" level="INFO" />
 
-    <!-- Spring AOP and AspectJ -->
-    <springProfile name="dev">
-        <logger name="org.springframework.aop" level="DEBUG" />
-        <logger name="org.aspectj" level="DEBUG" />
-    </springProfile>
-
     <!-- Hibernate logs -->
     <logger name="org.hibernate" level="INFO" />
+    <logger name="org.hibernate.orm.jdbc.bind" level="OFF" />
+    <logger name="org.hibernate.engine.transaction" level="INFO" />
+    
     <springProfile name="dev">
-        <logger name="org.hibernate.SQL" level="DEBUG" />
-        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" />
+        <logger name="org.hibernate.SQL" level="INFO" />
+        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="INFO" />
     </springProfile>
 
     <!-- Root logger level for all environments -->
@@ -182,9 +99,6 @@
         <appender-ref ref="ERROR_FILE" />
         <appender-ref ref="SUCCESS_API" />
         <appender-ref ref="FAILED_API" />
-        <appender-ref ref="AUDIT_LOG" />
-        <appender-ref ref="PERFORMANCE_LOG" />
-        <appender-ref ref="SERVICE_LOG" />
     </root>
     
     <!-- Production configuration with increased log levels -->
@@ -195,11 +109,11 @@
             <appender-ref ref="ERROR_FILE" />
             <appender-ref ref="SUCCESS_API" />
             <appender-ref ref="FAILED_API" />
-            <appender-ref ref="AUDIT_LOG" />
-            <appender-ref ref="PERFORMANCE_LOG" />
-            <appender-ref ref="SERVICE_LOG" />
         </root>
         <logger name="com.lockbox" level="INFO" />
+        <logger name="org.hibernate" level="ERROR" />
+        <logger name="org.hibernate.orm.jdbc.bind" level="OFF" />
+        <logger name="org.hibernate.engine.transaction" level="ERROR" />
     </springProfile>
     
     <!-- Test configuration with minimal logging -->
@@ -209,6 +123,9 @@
             <appender-ref ref="FILE" />
             <appender-ref ref="ERROR_FILE" />
         </root>
+        <logger name="org.hibernate" level="ERROR" />
+        <logger name="org.hibernate.orm.jdbc.bind" level="OFF" />
+        <logger name="org.hibernate.engine.transaction" level="ERROR" />
     </springProfile>
 
 </configuration> 

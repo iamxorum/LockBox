@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LockBox - Edit User</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+    <link rel="icon" type="image/png" th:href="@{/images/favicon.png}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS structure -->
+    <link rel="stylesheet" th:href="@{/css/lockbox-common.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-tables.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-animations.css}">
+    <link rel="stylesheet" th:href="@{/css/lockbox-dashboard.css}">
+    <!-- Theme setup script -->
+    <script>
+        // Set initial theme based on saved preference or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        } else if (systemPrefersDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+</head>
+<body class="dashboard-body">
+    <div class="sidebar-toggle" id="sidebarToggle">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </div>
+
+    <!-- Background elements -->
+    <div class="bg-pattern"></div>
+    <div class="bg-gradients"></div>
+    
+    <div class="dashboard-layout">
+        <!-- Use the sidebar fragment with currentPage parameter -->
+        <th:block th:replace="~{fragments/sidebar :: sidebar('users')}"></th:block>
+        
+        <div class="main-content-wrapper">
+            <div class="main-content">
+                <div class="page-header">
+                    <div class="header-content static-appear">
+                        <h1>Edit User</h1>
+                        <p class="text-muted">Modify user information</p>
+                    </div>
+                </div>
+                
+                <!-- Form Card -->
+                <div class="card static-appear">
+                    <form th:action="@{/users/{id}(id=${userId})}" th:object="${user}" method="post" class="form">
+                        
+                        <!-- Error Display -->
+                        <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                            <div class="alert-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                            </div>
+                            <span>Please correct the errors below</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" class="form-control" id="username" th:field="*{username}" required>
+                            <div class="error-message" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Username error</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                            <div class="error-message" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email error</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" class="form-control" id="firstName" th:field="*{firstName}">
+                            <div class="error-message" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}">First name error</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" class="form-control" id="lastName" th:field="*{lastName}">
+                            <div class="error-message" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">Last name error</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">Password (leave empty to keep current)</label>
+                            <div class="password-input-container">
+                                <input type="password" class="form-control" id="password" th:field="*{password}">
+                                <button type="button" class="btn btn-secondary" id="togglePasswordBtn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    Show Password
+                                </button>
+                                <button type="button" class="btn" id="generatePasswordBtn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                                    </svg>
+                                    Generate
+                                </button>
+                            </div>
+                            <div class="error-message" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Password error</div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <a href="/users" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+                document.body.classList.toggle('sidebar-open');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 992 && 
+                    !sidebar.contains(event.target) && 
+                    !sidebarToggle.contains(event.target) && 
+                    sidebar.classList.contains('active')) {
+                    sidebar.classList.remove('active');
+                    document.body.classList.remove('sidebar-open');
+                }
+            });
+            
+            // Password toggle functionality
+            const toggleBtn = document.getElementById('togglePasswordBtn');
+            const passwordInput = document.getElementById('password');
+            const generateBtn = document.getElementById('generatePasswordBtn');
+            
+            toggleBtn.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Toggle button text
+                if (type === 'password') {
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        Show Password
+                    `;
+                } else {
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                        Hide Password
+                    `;
+                }
+            });
+            
+            // Generate password functionality
+            generateBtn.addEventListener('click', function() {
+                const length = 16;
+                const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
+                let password = "";
+                
+                for (let i = 0; i < length; i++) {
+                    const randomIndex = Math.floor(Math.random() * charset.length);
+                    password += charset[randomIndex];
+                }
+                
+                passwordInput.value = password;
+                passwordInput.type = 'text';
+                
+                // Update toggle button to "Hide Password"
+                toggleBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                    Hide Password
+                `;
+            });
+        });
+    </script>
+</body>
+</html> 

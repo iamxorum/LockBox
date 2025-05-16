@@ -1,0 +1,637 @@
+/* LockBox Setup Page Styles */
+
+/* Setup specific layout */
+.setup-container {
+    width: 720px;
+    max-width: 90vw;
+    position: relative;
+    z-index: 2;
+}
+
+.setup-container .card {
+    padding: 0;
+}
+
+.setup-header {
+    padding: 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background-color: rgba(139, 92, 246, 0.05);
+}
+
+.setup-header h1 {
+    margin-bottom: 0.5rem;
+}
+
+.setup-content {
+    padding: 2rem;
+}
+
+/* Form controls styling with dark mode support */
+.form-control {
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 0.875rem 1rem;
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+    width: 100%;
+    font-size: 1rem;
+    font-family: var(--font-sans, 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif);
+}
+
+/* Fix for placeholder not disappearing */
+.form-control:focus::placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+}
+
+.form-control:focus::-webkit-input-placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+}
+
+.form-control:focus::-moz-placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+}
+
+.form-control:focus:-ms-input-placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+}
+
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover,
+.form-control:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-primary);
+    -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    outline: none;
+}
+
+.form-control:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+}
+
+/* Dark mode specific input styling */
+[data-theme="dark"] .form-control {
+    background-color: rgba(23, 23, 23, 0.8);
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(75, 85, 99, 0.5);
+}
+
+[data-theme="dark"] .form-control:focus {
+    background-color: rgba(23, 23, 23, 0.95);
+    border-color: var(--primary);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: rgba(156, 163, 175, 0.7);
+}
+
+/* Fixed autofill for dark mode */
+[data-theme="dark"] .form-control:-webkit-autofill,
+[data-theme="dark"] .form-control:-webkit-autofill:hover,
+[data-theme="dark"] .form-control:-webkit-autofill:focus {
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.9);
+    -webkit-box-shadow: 0 0 0px 1000px rgba(23, 23, 23, 0.8) inset;
+    caret-color: white;
+}
+
+/* Input with value should hide placeholder */
+.form-control:not(:placeholder-shown) {
+    background-color: var(--bg-input);
+}
+
+[data-theme="dark"] .form-control:not(:placeholder-shown) {
+    background-color: rgba(23, 23, 23, 0.95);
+}
+
+/* Focus state styles */
+.form-control[data-focused="true"] {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+/* Process class to ensure styles apply after JS initialization */
+.form-control-processed {
+    animation: flashBg 0.2s;
+}
+
+@keyframes flashBg {
+    0% { background-color: var(--bg-input); }
+    50% { background-color: rgba(139, 92, 246, 0.1); }
+    100% { background-color: var(--bg-input); }
+}
+
+[data-theme="dark"] .form-control-processed {
+    animation: flashBgDark 0.2s;
+}
+
+@keyframes flashBgDark {
+    0% { background-color: rgba(23, 23, 23, 0.8); }
+    50% { background-color: rgba(139, 92, 246, 0.2); }
+    100% { background-color: rgba(23, 23, 23, 0.8); }
+}
+
+/* Enhanced dark mode elements */
+[data-theme="dark"] .card {
+    background-color: rgba(30, 30, 30, 0.95);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .password-toggle {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .password-toggle:hover {
+    background-color: rgba(139, 92, 246, 0.2);
+    color: var(--primary);
+}
+
+[data-theme="dark"] .review-section {
+    background-color: rgba(30, 30, 30, 0.6);
+}
+
+/* Form layout components */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.field-hint {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Password input styling */
+.password-input-container {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.password-toggle:hover {
+    background-color: rgba(139, 92, 246, 0.1);
+    color: var(--primary);
+}
+
+/* Select field styling with custom dropdown arrow */
+select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    padding-right: 40px;
+}
+
+/* Button styling */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.9375rem;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow);
+    border: none;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    background-color: var(--bg-input);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+}
+
+/* Setup steps progress indicator */
+.setup-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.setup-steps::before {
+    content: '';
+    position: absolute;
+    top: 2rem;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--border);
+    z-index: -1;
+}
+
+.setup-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 33.333%;
+    text-align: center;
+}
+
+.step-number {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-color: var(--bg-card);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.step-active .step-number {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: scale(1.05);
+}
+
+.step-complete .step-number {
+    background-color: var(--success);
+    color: white;
+    border-color: var(--success);
+}
+
+.step-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.step-active .step-label {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.step-complete .step-label {
+    color: var(--success);
+}
+
+/* Multi-step form styling */
+.setup-form-step {
+    display: none;
+}
+
+.setup-form-step.active {
+    display: block;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Settings form layout */
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+/* Review section styling */
+.review-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: var(--bg-input);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.review-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.review-item {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    display: flex;
+}
+
+.review-item strong {
+    min-width: 150px;
+    display: inline-block;
+    color: var(--text-primary);
+}
+
+/* Error message styling */
+.error-message {
+    color: var(--error);
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    background-color: rgba(239, 68, 68, 0.1);
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    border-left: 3px solid var(--error);
+}
+
+/* Alert styling */
+.alert {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.alert-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.alert-info {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--primary);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .setup-steps {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .setup-steps::before {
+        display: none;
+    }
+    
+    .setup-step {
+        width: 100%;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 1rem;
+    }
+    
+    .step-number {
+        width: 3rem;
+        height: 3rem;
+        margin-bottom: 0;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Support for reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .setup-form-step.active {
+        animation: none;
+    }
+    
+    .btn:hover {
+        transform: none;
+    }
+    
+    .step-active .step-number {
+        transform: none;
+    }
+}
+
+/* Custom placeholder solution */
+.custom-placeholder {
+    position: absolute;
+    pointer-events: none;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 1rem;
+    color: var(--text-secondary);
+    opacity: 1;
+    transition: opacity 0.2s ease;
+    z-index: 1;
+}
+
+[data-theme="dark"] .custom-placeholder {
+    color: rgba(156, 163, 175, 0.7);
+}
+
+/* Floating label design */
+.floating-label-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 0.25rem;
+}
+
+.floating-label {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: transparent;
+    padding: 0 0.25rem;
+    margin: 0;
+    color: var(--text-secondary);
+    pointer-events: none;
+    transition: all 0.2s ease;
+    transform-origin: left top;
+    font-size: 1rem;
+    z-index: 1;
+}
+
+.form-control:focus ~ .floating-label,
+.form-control:not(:placeholder-shown) ~ .floating-label {
+    top: -5px;
+    transform: translateY(0) scale(0.85);
+    color: var(--primary);
+    background-color: var(--bg-input);
+    padding: 0 0.25rem;
+}
+
+/* Add empty placeholder to make :not(:placeholder-shown) work */
+.form-control::placeholder {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Password field specific styling */
+.password-container {
+    position: relative;
+}
+
+.password-container .password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .floating-label {
+    color: rgba(156, 163, 175, 0.7);
+}
+
+[data-theme="dark"] .form-control:focus ~ .floating-label,
+[data-theme="dark"] .form-control:not(:placeholder-shown) ~ .floating-label {
+    color: var(--primary);
+    background-color: rgba(23, 23, 23, 0.8);
+}
+
+.input-focused .floating-label {
+    top: 0;
+    transform: translateY(-50%) scale(0.85);
+    color: var(--primary);
+}
+
+[data-theme="dark"] .input-focused .floating-label {
+    color: var(--primary);
+}
+
+/* Add form control padding to allow space for the floating label */
+.floating-label-container .form-control {
+    padding-top: 1.25rem;
+    padding-bottom: 0.5rem;
+}
+
+/* App name preview styling */
+.app-name-preview {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    background-color: rgba(139, 92, 246, 0.05);
+    border-radius: var(--radius);
+    border: 1px dashed rgba(139, 92, 246, 0.3);
+}
+
+.preview-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.preview-option:last-child {
+    margin-bottom: 0;
+}
+
+.preview-option input[type="radio"] {
+    margin-right: 0.5rem;
+}
+
+.preview-option label {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    gap: 0.25rem;
+}
+
+.preview-option span {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Select container specific styles */
+.select-container {
+    position: relative;
+}
+
+.select-label {
+    background-color: var(--bg-input);
+    z-index: 1;
+}
+
+[data-theme="dark"] .select-label {
+    background-color: rgba(23, 23, 23, 0.8);
+}
+
+/* Fix select field styling */
+select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    padding-right: 40px;
+}
+
+/* Make select labels always float since selects always have a value */
+.select-container .floating-label {
+    top: -5px;
+    transform: translateY(0) scale(0.85);
+} 

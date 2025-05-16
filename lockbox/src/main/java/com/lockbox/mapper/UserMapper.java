@@ -24,6 +24,21 @@ public class UserMapper {
         return dto;
     }
     
+    public UserCreationDto toCreationDto(User user) {
+        if (user == null) {
+            return null;
+        }
+        
+        UserCreationDto dto = new UserCreationDto();
+        dto.setUsername(user.getUsername());
+        // Don't set password for security reasons
+        dto.setEmail(user.getEmail());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        
+        return dto;
+    }
+    
     public User toEntity(UserCreationDto dto) {
         if (dto == null) {
             return null;
