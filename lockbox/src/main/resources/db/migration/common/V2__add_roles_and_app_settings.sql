@@ -16,13 +16,11 @@ CREATE TABLE app_settings (
     setup_completed_at TIMESTAMP,
     app_name VARCHAR(255) DEFAULT 'LockBox',
     encryption_algo VARCHAR(50) DEFAULT 'AES-256',
-    password_expiry_days INT DEFAULT 90,
     session_timeout_minutes INT DEFAULT 30,
-    allow_registration BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP
 );
 
 -- Insert default app settings
-INSERT INTO app_settings (setup_completed, app_name, encryption_algo, password_expiry_days, session_timeout_minutes, allow_registration)
-VALUES (FALSE, 'LockBox', 'AES-256', 90, 30, FALSE); 
+INSERT INTO app_settings (setup_completed, app_name, encryption_algo, session_timeout_minutes)
+VALUES (FALSE, 'LockBox', 'AES-256', 30); 

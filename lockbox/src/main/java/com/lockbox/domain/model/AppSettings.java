@@ -29,14 +29,8 @@ public class AppSettings {
     @Column(name = "encryption_algo")
     private String encryptionAlgorithm = "AES-256";
     
-    @Column(name = "password_expiry_days")
-    private Integer passwordExpiryDays = 90;
-    
     @Column(name = "session_timeout_minutes")
     private Integer sessionTimeoutMinutes = 30;
-
-    @Column(name = "allow_registration")
-    private boolean allowRegistration = false;
 
     public Long getId() {
         return id;
@@ -78,27 +72,11 @@ public class AppSettings {
         this.encryptionAlgorithm = encryptionAlgorithm;
     }
 
-    public Integer getPasswordExpiryDays() {
-        return passwordExpiryDays;
-    }
-
-    public void setPasswordExpiryDays(Integer passwordExpiryDays) {
-        this.passwordExpiryDays = passwordExpiryDays;
-    }
-
     public Integer getSessionTimeoutMinutes() {
         return sessionTimeoutMinutes;
     }
 
     public void setSessionTimeoutMinutes(Integer sessionTimeoutMinutes) {
         this.sessionTimeoutMinutes = sessionTimeoutMinutes;
-    }
-
-    public boolean isAllowRegistration() {
-        return allowRegistration;
-    }
-
-    public void setAllowRegistration(boolean allowRegistration) {
-        this.allowRegistration = allowRegistration;
     }
 } 

@@ -202,7 +202,6 @@ select {
 
 /* Color input specific styles */
 input[type="color"] {
-  -webkit-appearance: none;
   width: 100%;
   height: 40px;
   padding: 0;

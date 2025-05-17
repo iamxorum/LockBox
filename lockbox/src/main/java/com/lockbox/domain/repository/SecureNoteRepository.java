@@ -26,4 +26,6 @@ public interface SecureNoteRepository extends JpaRepository<SecureNote, Long> {
     
     @Query("SELECT DISTINCT n FROM SecureNote n LEFT JOIN FETCH n.tags WHERE n.id = :id")
     Optional<SecureNote> findByIdWithTags(@PathVariable("id") Long id);
+
+    long countByUserId(Long userId);
 } 

@@ -64,9 +64,6 @@ public class SetupController {
             BindingResult adminUserBindingResult,
             @Valid @ModelAttribute("appSettings") AppSettings appSettings,
             BindingResult appSettingsBindingResult,
-            @RequestParam(value = "nameFormat", defaultValue = "prefix") String nameFormat,
-            @RequestParam(value = "appNamePrefix", required = false) String appNamePrefix,
-            @RequestParam(value = "appNameSuffix", required = false) String appNameSuffix,
             RedirectAttributes redirectAttributes) {
 
         // Check if setup is already completed
@@ -106,23 +103,6 @@ public class SetupController {
             adminUser.setPassword(passwordEncoder.encode(adminUserDto.getPassword()));
             adminUser.addRole("ADMIN");
             userService.save(adminUser);
-
-            // Format app name based on selection
-            if ("prefix".equals(nameFormat) && appNamePrefix != null && !appNamePrefix.isEmpty()) {
-                appSettings.setAppName(appNamePrefix + " LockBox");
-            } else if ("suffix".equals(nameFormat) && appNameSuffix != null && !appNameSuffix.isEmpty()) {
-                appSettings.setAppName("LockBox " + appNameSuffix);
-            } else {
-                // Fallback to the original logic
-                String orgName = appSettings.getAppName().trim();
-                if (!orgName.isEmpty()) {
-                    if ("prefix".equals(nameFormat)) {
-                        appSettings.setAppName(orgName + " LockBox");
-                    } else {
-                        appSettings.setAppName("LockBox " + orgName);
-                    }
-                }
-            }
 
             // Update and save app settings
             appSettingsService.updateSettings(appSettings);

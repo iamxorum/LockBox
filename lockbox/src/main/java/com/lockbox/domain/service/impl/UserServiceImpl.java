@@ -1,11 +1,14 @@
 package com.lockbox.domain.service.impl;
 
-import com.lockbox.domain.repository.UserRepository;
+import com.lockbox.domain.repository.*;
 import com.lockbox.domain.model.User;
 import com.lockbox.domain.service.UserService;
+import com.lockbox.dto.UserStatsDto;
+import com.lockbox.exception.ResourceNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,10 +17,23 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     
     private final UserRepository userRepository;
+    private final PasswordRepository passwordRepository;
+    private final SecureNoteRepository secureNoteRepository;
+    private final CategoryRepository categoryRepository;
+    private final TagRepository tagRepository;
     
     @Autowired
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(
+            UserRepository userRepository,
+            PasswordRepository passwordRepository,
+            SecureNoteRepository secureNoteRepository,
+            CategoryRepository categoryRepository,
+            TagRepository tagRepository) {
         this.userRepository = userRepository;
+        this.passwordRepository = passwordRepository;
+        this.secureNoteRepository = secureNoteRepository;
+        this.categoryRepository = categoryRepository;
+        this.tagRepository = tagRepository;
     }
     
     @Override
@@ -63,5 +79,22 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public UserStatsDto getUserStats(Long userId) {
+        // Verify user exists
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User", "id", userId);
+        }
+
+        // Get counts for each type of data
+        long passwordCount = passwordRepository.countByUserId(userId);
+        long secureNoteCount = secureNoteRepository.countByUserId(userId);
+        long categoryCount = categoryRepository.countByUserId(userId);
+        long tagCount = tagRepository.countByUserId(userId);
+
+        return new UserStatsDto(passwordCount, secureNoteCount, categoryCount, tagCount);
     }
 } 

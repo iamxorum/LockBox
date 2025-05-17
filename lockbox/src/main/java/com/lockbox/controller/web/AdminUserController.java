@@ -6,6 +6,8 @@ import com.lockbox.dto.UserCreationDto;
 import com.lockbox.mapper.UserMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -195,5 +198,40 @@ public class AdminUserController {
         }
         
         return "redirect:/users";
+    }
+
+    @PostMapping("/{id}/current-password")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> getCurrentPassword(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
+        
+        // Get current admin user
+        User currentUser = userService.findByUsername(authentication.getName()).orElseThrow();
+        
+        // Verify the provided password matches the admin's password
+        if (!passwordEncoder.matches(request.get("password"), currentUser.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of(
+                    "success", false,
+                    "message", "Invalid administrator password"
+                ));
+        }
+        
+        // Get target user
+        Optional<User> targetUserOpt = userService.findById(id);
+        if (targetUserOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                    "success", false,
+                    "message", "User not found"
+                ));
+        }
+        
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "password", targetUserOpt.get().getPassword()
+        ));
     }
 } 

@@ -36,4 +36,6 @@ public interface PasswordRepository extends JpaRepository<Password, Long> {
     
     @Query("SELECT DISTINCT p FROM Password p LEFT JOIN FETCH p.tags WHERE p.id = :id")
     Optional<Password> findByIdWithTags(@PathVariable("id") Long id);
+
+    long countByUserId(Long userId);
 } 

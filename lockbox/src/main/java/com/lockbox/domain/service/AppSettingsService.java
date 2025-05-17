@@ -63,9 +63,7 @@ public class AppSettingsService {
         // Update settings fields
         currentSettings.setAppName(settings.getAppName());
         currentSettings.setEncryptionAlgorithm(settings.getEncryptionAlgorithm());
-        currentSettings.setPasswordExpiryDays(settings.getPasswordExpiryDays());
         currentSettings.setSessionTimeoutMinutes(settings.getSessionTimeoutMinutes());
-        currentSettings.setAllowRegistration(settings.isAllowRegistration());
         
         return appSettingsRepository.save(currentSettings);
     }

@@ -184,34 +184,9 @@
                                            placeholder=" "
                                            autocomplete="off"
                                            required>
-                                    <label for="appName" class="floating-label">Organization Name</label>
+                                    <label for="appName" class="floating-label">Application Name</label>
                                 </div>
-                                <div class="field-hint">Will be displayed as "Organization LockBox" or "LockBox Organization"</div>
-                                <div class="app-name-preview">
-                                    <div class="preview-option">
-                                        <input type="radio" name="nameFormat" id="prefixFormat" value="prefix" checked>
-                                        <label for="prefixFormat">
-                                            <span id="prefixPreview">Organization</span> LockBox
-                                        </label>
-                                    </div>
-                                    <div class="preview-option">
-                                        <input type="radio" name="nameFormat" id="suffixFormat" value="suffix">
-                                        <label for="suffixFormat">
-                                            LockBox <span id="suffixPreview">Organization</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <div class="floating-label-container">
-                                    <input type="number" id="passwordExpiryDays" name="passwordExpiryDays" class="form-control" 
-                                           th:field="*{passwordExpiryDays}" 
-                                           placeholder=" "
-                                           min="30" max="365" required>
-                                    <label for="passwordExpiryDays" class="floating-label">Password Expiry (days)</label>
-                                </div>
-                                <div class="field-hint">How often should passwords expire (30-365 days)</div>
+                                <div class="field-hint">The name of your LockBox instance</div>
                             </div>
                             
                             <div class="form-group">
@@ -224,25 +199,11 @@
                                 </div>
                                 <div class="field-hint">Idle time before session expires (5-120 minutes)</div>
                             </div>
-                            
-                            <div class="form-group">
-                                <div class="floating-label-container select-container">
-                                    <select id="allowRegistration" name="allowRegistration" class="form-control" 
-                                            th:field="*{allowRegistration}">
-                                        <option value="true">Yes, allow users to register</option>
-                                        <option value="false">No, admin must create accounts</option>
-                                    </select>
-                                    <label for="allowRegistration" class="floating-label select-label">Allow User Registration</label>
-                                </div>
-                                <div class="field-hint">Enable self-registration for new users</div>
-                            </div>
                         </div>
                         
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary prev-step" data-prev="step-1">Back: Admin Account</button>
                             <button type="button" class="btn btn-primary next-step" data-next="step-3">Next: Review & Finish</button>
-                            <input type="hidden" name="appNamePrefix" id="appNamePrefix" value="">
-                            <input type="hidden" name="appNameSuffix" id="appNameSuffix" value="">
                         </div>
                     </div>
                     
@@ -280,13 +241,7 @@
                                 <strong>App Name:</strong> <span id="review-app-name"></span>
                             </div>
                             <div class="review-item">
-                                <strong>Password Expiry:</strong> <span id="review-password-expiry"></span> days
-                            </div>
-                            <div class="review-item">
                                 <strong>Session Timeout:</strong> <span id="review-session-timeout"></span> minutes
-                            </div>
-                            <div class="review-item">
-                                <strong>Allow Registration:</strong> <span id="review-allow-registration"></span>
                             </div>
                         </div>
                         
@@ -317,55 +272,6 @@
             const nextButtons = document.querySelectorAll('.next-step');
             const prevButtons = document.querySelectorAll('.prev-step');
             const stepIndicators = document.querySelectorAll('.setup-step');
-            
-            // App name preview functionality
-            const appNameInput = document.getElementById('appName');
-            const prefixPreview = document.getElementById('prefixPreview');
-            const suffixPreview = document.getElementById('suffixPreview');
-            const prefixFormat = document.getElementById('prefixFormat');
-            const suffixFormat = document.getElementById('suffixFormat');
-            
-            // Handler for app name changes
-            function updateAppNamePreview() {
-                const value = appNameInput.value.trim() || 'Organization';
-                prefixPreview.textContent = value;
-                suffixPreview.textContent = value;
-            }
-            
-            // Initialize app name preview
-            if (appNameInput) {
-                appNameInput.addEventListener('input', updateAppNamePreview);
-                updateAppNamePreview();
-                
-                // Update hidden app name field with format when submitting
-                form.addEventListener('submit', function() {
-                    const orgName = appNameInput.value.trim();
-                    if (orgName) {
-                        if (prefixFormat.checked) {
-                            document.getElementById('appNamePrefix').value = orgName;
-                        } else if (suffixFormat.checked) {
-                            document.getElementById('appNameSuffix').value = orgName;
-                        }
-                    }
-                });
-                
-                // Update review section when moving to step 3
-                const reviewAppNameElement = document.getElementById('review-app-name');
-                if (reviewAppNameElement) {
-                    const updateReviewAppName = function() {
-                        const orgName = appNameInput.value.trim() || 'Organization';
-                        if (prefixFormat.checked) {
-                            reviewAppNameElement.textContent = orgName + " LockBox";
-                        } else {
-                            reviewAppNameElement.textContent = "LockBox " + orgName;
-                        }
-                    };
-                    
-                    prefixFormat.addEventListener('change', updateReviewAppName);
-                    suffixFormat.addEventListener('change', updateReviewAppName);
-                    appNameInput.addEventListener('input', updateReviewAppName);
-                }
-            }
             
             // Clear all pre-filled content from inputs
             const inputs = document.querySelectorAll('input:not([type="radio"])');
@@ -421,10 +327,8 @@
                     
                     if (currentStep.id === 'step-2') {
                         const appName = document.getElementById('appName').value;
-                        const passwordExpiry = document.getElementById('passwordExpiryDays').value;
-                        const sessionTimeout = document.getElementById('sessionTimeoutMinutes').value;
                         
-                        if (!appName || !passwordExpiry || !sessionTimeout) {
+                        if (!appName) {
                             alert('Please fill in all required fields.');
                             return;
                         }
@@ -438,20 +342,11 @@
                         const fullName = (firstName || lastName) ? `${firstName} ${lastName}` : 'Not provided';
                         document.getElementById('review-name').textContent = fullName;
                         
-                        // Updated app name handling with prefix/suffix support
+                        // Updated app name handling
                         const orgName = appName.trim();
-                        const prefixChecked = document.getElementById('prefixFormat').checked;
-                        if (prefixChecked) {
-                            document.getElementById('review-app-name').textContent = orgName + " LockBox";
-                        } else {
-                            document.getElementById('review-app-name').textContent = "LockBox " + orgName;
-                        }
+                        document.getElementById('review-app-name').textContent = orgName + " LockBox";
                         
-                        document.getElementById('review-password-expiry').textContent = passwordExpiry;
-                        document.getElementById('review-session-timeout').textContent = sessionTimeout;
-                        
-                        const allowRegistration = document.getElementById('allowRegistration').value === 'true' ? 'Yes' : 'No';
-                        document.getElementById('review-allow-registration').textContent = allowRegistration;
+                        document.getElementById('review-session-timeout').textContent = document.getElementById('sessionTimeoutMinutes').value;
                     }
                     
                     // Hide current step, show next step

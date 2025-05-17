@@ -6,6 +6,7 @@ import com.lockbox.domain.service.UserService;
 import com.lockbox.dto.ApiResponse;
 import com.lockbox.dto.UserCreationDto;
 import com.lockbox.dto.UserDto;
+import com.lockbox.dto.UserStatsDto;
 import com.lockbox.mapper.UserMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -84,6 +85,20 @@ public class UserController extends BaseController {
         
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("User created successfully", savedUserDto));
+    }
+
+    @GetMapping("/{id}/stats")
+    @Operation(summary = "Get user statistics", description = "Retrieves statistics about a user's data")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Statistics retrieved",
+                    content = @Content(schema = @Schema(implementation = UserStatsDto.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<ApiResponse<UserStatsDto>> getUserStats(
+            @Parameter(description = "User ID", required = true) @PathVariable Long id) {
+        
+        UserStatsDto stats = userService.getUserStats(id);
+        return ResponseEntity.ok(ApiResponse.success("User statistics retrieved successfully", stats));
     }
 
     private User getUserOrThrow(Long id) {

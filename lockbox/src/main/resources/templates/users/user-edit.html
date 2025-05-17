@@ -13,6 +13,9 @@
     <link rel="stylesheet" th:href="@{/css/lockbox-tables.css}">
     <link rel="stylesheet" th:href="@{/css/lockbox-animations.css}">
     <link rel="stylesheet" th:href="@{/css/lockbox-dashboard.css}">
+    <!-- CSRF tokens -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <!-- Theme setup script -->
     <script>
         // Set initial theme based on saved preference or system preference
@@ -92,25 +95,14 @@
                             <div class="error-message" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}">Last name error</div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="password">Password (leave empty to keep current)</label>
-                            <div class="password-input-container">
-                                <input type="password" class="form-control" id="password" th:field="*{password}">
-                                <button type="button" class="btn btn-secondary" id="togglePasswordBtn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                    Show Password
-                                </button>
-                                <button type="button" class="btn" id="generatePasswordBtn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
-                                    </svg>
-                                    Generate
-                                </button>
-                            </div>
-                            <div class="error-message" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Password error</div>
+                        <!-- Remove password field, keep only the reset button -->
+                        <div class="password-actions">
+                            <button type="button" class="btn btn-primary" id="resetPasswordBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                                </svg>
+                                Reset Password
+                            </button>
                         </div>
                         
                         <div class="form-actions">
@@ -122,6 +114,421 @@
             </div>
         </div>
     </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container">
+        <div class="toast" id="statusToast">
+            <div class="toast-content">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="success-icon">
+                    <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                <span class="toast-message"></span>
+                <button class="toast-close">×</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div class="modal-backdrop" id="resetPasswordModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-wrapper">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="warning-icon">
+                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                    </svg>
+                    <h3 class="modal-title">Reset User Password</h3>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p class="modal-message">Enter a new password for this user.</p>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <div class="password-input-group">
+                        <input type="password" id="newPassword" class="form-control" placeholder="Enter new password">
+                        <button type="button" class="btn btn-icon" id="toggleNewPasswordBtn" title="Toggle password visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-generate" id="generateNewPasswordBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                        </svg>
+                        Generate Password
+                    </button>
+                    <div class="error-message" id="resetPasswordError" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelReset">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmResetBtn">
+                    <span class="spinner" style="display: none;"></span>
+                    Reset Password
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    /* Toast Styles */
+    .toast-container {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 1060;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .toast {
+        background: #1a1d29;
+        border-radius: 8px;
+        border-left: 3px solid #10B981;
+        overflow: hidden;
+        min-width: 320px;
+        max-width: 420px;
+        transform: translateY(100%);
+        opacity: 0;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .toast.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .toast-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: #1a1d29;
+        position: relative;
+    }
+
+    .success-icon {
+        flex-shrink: 0;
+        color: #10B981;
+    }
+
+    .toast-message {
+        color: #E2E8F0;
+        font-size: 0.875rem;
+        line-height: 1.25;
+        font-weight: 500;
+        flex-grow: 1;
+        padding-right: 1.5rem;
+    }
+
+    .toast-close {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #64748B;
+        font-size: 1.25rem;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+    }
+
+    .toast-close:hover {
+        color: #E2E8F0;
+    }
+
+    /* Password Input Group Styles */
+    .password-input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .password-input-group .form-control {
+        padding-right: 2.75rem;
+        font-family: monospace;
+        letter-spacing: 0.1em;
+        background: var(--bg-input);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+    }
+
+    .password-input-group .btn-icon {
+        position: absolute;
+        right: 0.5rem;
+        background: none;
+        border: none;
+        padding: 0.25rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .password-input-group .btn-icon:hover {
+        color: var(--text-primary);
+    }
+
+    /* Generate Password Button */
+    .btn-generate {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-generate:hover {
+        background: var(--bg-secondary-hover);
+        border-color: var(--border-hover);
+    }
+
+    .btn-generate svg {
+        width: 16px;
+        height: 16px;
+        color: var(--text-secondary);
+    }
+
+    /* Password Actions Styles */
+    .password-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .password-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .password-actions .btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Modal Styles */
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1050;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .modal-backdrop.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal-dialog {
+        background: var(--bg-card);
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        transform: scale(0.95) translateY(-10px);
+        transition: all 0.3s ease;
+    }
+
+    .modal-backdrop.show .modal-dialog {
+        transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .modal-title-wrapper svg {
+        color: var(--primary);
+    }
+
+    .modal-title {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .modal-body {
+        padding: 1.25rem;
+    }
+
+    .modal-message {
+        margin: 0 0 1.25rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.25rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+
+    /* Form Elements */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        background: var(--bg-input);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary-light);
+        outline: none;
+    }
+
+    /* Button Styles */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+        background: var(--bg-secondary-hover);
+    }
+
+    /* Spinner */
+    .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Error Message */
+    .error-message {
+        margin-top: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        background-color: var(--error-light);
+        color: var(--error);
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .error-message svg {
+        flex-shrink: 0;
+        color: var(--error);
+    }
+
+    /* Success Message */
+    .alert-success {
+        margin-top: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        background-color: var(--success-light);
+        color: var(--success);
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .alert-success svg {
+        flex-shrink: 0;
+        color: var(--success);
+    }
+
+    @media (max-width: 576px) {
+        .password-actions {
+            flex-direction: column;
+        }
+        
+        .password-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    </style>
 
     <script>
         // Sidebar toggle functionality
@@ -144,38 +551,97 @@
                     document.body.classList.remove('sidebar-open');
                 }
             });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+            const resetPasswordModal = document.getElementById('resetPasswordModal');
+            const newPasswordInput = document.getElementById('newPassword');
+            const toggleNewPasswordBtn = document.getElementById('toggleNewPasswordBtn');
+            const generateNewPasswordBtn = document.getElementById('generateNewPasswordBtn');
+            const confirmResetBtn = document.getElementById('confirmResetBtn');
+            const cancelResetBtn = document.getElementById('cancelReset');
+            const resetPasswordError = document.getElementById('resetPasswordError');
+            const statusToast = document.getElementById('statusToast');
             
-            // Password toggle functionality
-            const toggleBtn = document.getElementById('togglePasswordBtn');
-            const passwordInput = document.getElementById('password');
-            const generateBtn = document.getElementById('generatePasswordBtn');
-            
-            toggleBtn.addEventListener('click', function() {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
+            // Function to show toast notification
+            function showToast(message, type = 'success') {
+                const toast = document.getElementById('statusToast');
+                const messageEl = toast.querySelector('.toast-message');
+                const icon = toast.querySelector('svg');
                 
-                // Toggle button text
-                if (type === 'password') {
-                    this.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        Show Password
-                    `;
+                messageEl.textContent = message;
+                
+                if (type === 'success') {
+                    toast.style.borderLeftColor = '#10B981';
+                    icon.innerHTML = '<path d="M20 6L9 17l-5-5"/>';
+                    icon.style.color = '#10B981';
                 } else {
-                    this.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                            <line x1="1" y1="1" x2="23" y2="23"></line>
-                        </svg>
-                        Hide Password
+                    toast.style.borderLeftColor = '#EF4444';
+                    icon.innerHTML = `
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     `;
+                    icon.style.color = '#EF4444';
                 }
+                
+                // Remove any existing animation
+                toast.classList.remove('show');
+                void toast.offsetWidth; // Force reflow
+                
+                // Show toast
+                toast.classList.add('show');
+                
+                // Remove toast after delay
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 5000);
+            }
+            
+            // Get user ID from the form action URL
+            const userId = window.location.pathname.split('/').slice(-2)[0];
+            
+            // Reset password button click
+            resetPasswordBtn.addEventListener('click', function() {
+                resetPasswordModal.classList.add('show');
+                newPasswordInput.value = '';
+                resetPasswordError.style.display = 'none';
             });
             
-            // Generate password functionality
-            generateBtn.addEventListener('click', function() {
+            // Cancel reset
+            cancelResetBtn.addEventListener('click', function() {
+                resetPasswordModal.classList.remove('show');
+            });
+            
+            // Handle click outside modal
+            resetPasswordModal.addEventListener('click', function(e) {
+                if (e.target === resetPasswordModal) {
+                    resetPasswordModal.classList.remove('show');
+                }
+            });
+
+            // Toggle new password visibility
+            toggleNewPasswordBtn.addEventListener('click', function() {
+                const type = newPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                newPasswordInput.setAttribute('type', type);
+                
+                // Toggle button icon
+                this.innerHTML = type === 'password' ? `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                ` : `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                `;
+            });
+
+            // Generate new password
+            generateNewPasswordBtn.addEventListener('click', function() {
                 const length = 16;
                 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
                 let password = "";
@@ -185,17 +651,74 @@
                     password += charset[randomIndex];
                 }
                 
-                passwordInput.value = password;
-                passwordInput.type = 'text';
+                newPasswordInput.value = password;
+                newPasswordInput.type = 'text';
                 
-                // Update toggle button to "Hide Password"
-                toggleBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                // Update toggle button to show "hide" icon
+                toggleNewPasswordBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                         <line x1="1" y1="1" x2="23" y2="23"></line>
                     </svg>
-                    Hide Password
                 `;
+            });
+            
+            // Update success message to use toast
+            confirmResetBtn.addEventListener('click', async function() {
+                const spinner = this.querySelector('.spinner');
+                const newPassword = newPasswordInput.value;
+                
+                if (!newPassword) {
+                    resetPasswordError.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Please enter a new password
+                    `;
+                    resetPasswordError.style.display = 'flex';
+                    return;
+                }
+                
+                spinner.style.display = 'inline-block';
+                this.disabled = true;
+                
+                try {
+                    // Create a hidden form input for the password
+                    let passwordInput = document.querySelector('input[name="password"]');
+                    if (!passwordInput) {
+                        passwordInput = document.createElement('input');
+                        passwordInput.type = 'hidden';
+                        passwordInput.name = 'password';
+                        document.querySelector('form').appendChild(passwordInput);
+                    }
+                    passwordInput.value = newPassword;
+                    
+                    resetPasswordModal.classList.remove('show');
+                    
+                    // Show success toast
+                    showToast('New password set. Click "Save Changes" to apply.');
+                    
+                } catch (error) {
+                    resetPasswordError.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        An unexpected error occurred. Please try again.
+                    `;
+                    resetPasswordError.style.display = 'flex';
+                } finally {
+                    spinner.style.display = 'none';
+                    this.disabled = false;
+                }
+            });
+
+            // Add close button functionality
+            document.querySelector('.toast-close').addEventListener('click', function() {
+                document.getElementById('statusToast').classList.remove('show');
             });
         });
     </script>
