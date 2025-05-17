@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import com.lockbox.domain.model.Password;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -38,4 +39,7 @@ public interface PasswordRepository extends JpaRepository<Password, Long> {
     Optional<Password> findByIdWithTags(@PathVariable("id") Long id);
 
     long countByUserId(Long userId);
+    
+    @Query("SELECT p.category.id as categoryId, COUNT(p) as count FROM Password p WHERE p.user.id = :userId GROUP BY p.category.id")
+    List<Object[]> countPasswordsByCategory(@Param("userId") Long userId);
 } 

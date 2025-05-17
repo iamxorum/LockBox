@@ -1,17 +1,6 @@
 /* LockBox Tables and Lists Styles */
 
 /* Container for list views */
-.container {
-  max-width: 95%;
-  margin: 2rem auto;
-  background-color: var(--bg-card);
-  padding: 2rem;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  transition: all 0.3s ease;
-  border: 1px solid var(--border);
-  overflow-x: auto;
-}
 
 /* Header for list views */
 .header {

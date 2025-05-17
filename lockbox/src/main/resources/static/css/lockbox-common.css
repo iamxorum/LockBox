@@ -444,4 +444,37 @@ input[type="color"]::-moz-color-swatch {
 
 .show-password .eye-off-icon {
   display: block;
+}
+
+/* Container styles */
+.container {
+    width: 90%;
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border);
+}
+
+@media (max-width: 1400px) {
+    .container {
+        width: 90%;
+    }
+}
+
+@media (max-width: 992px) {
+    .container {
+        width: 95%;
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        width: 98%;
+        padding: 1rem;
+        margin: 1rem auto;
+    }
 } 

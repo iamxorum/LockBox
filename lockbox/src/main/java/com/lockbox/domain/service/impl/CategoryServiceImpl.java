@@ -1,6 +1,7 @@
 package com.lockbox.domain.service.impl;
 
 import com.lockbox.domain.repository.CategoryRepository;
+import com.lockbox.domain.repository.PasswordRepository;
 import com.lockbox.domain.model.Category;
 import com.lockbox.domain.service.CategoryService;
 
@@ -8,16 +9,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final PasswordRepository passwordRepository;
     
     @Autowired
-    public CategoryServiceImpl(CategoryRepository categoryRepository) {
+    public CategoryServiceImpl(CategoryRepository categoryRepository, PasswordRepository passwordRepository) {
         this.categoryRepository = categoryRepository;
+        this.passwordRepository = passwordRepository;
     }
     
     @Override
@@ -58,5 +63,15 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public boolean existsByUserIdAndName(Long userId, String name) {
         return categoryRepository.existsByUserIdAndName(userId, name);
+    }
+    
+    @Override
+    public Map<Long, Long> getPasswordCountsByCategory(Long userId) {
+        return passwordRepository.countPasswordsByCategory(userId)
+                .stream()
+                .collect(Collectors.toMap(
+                    row -> (Long) row[0],  // categoryId
+                    row -> (Long) row[1]   // count
+                ));
     }
 } 

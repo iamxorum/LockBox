@@ -2,8 +2,9 @@
 
 /* Setup specific layout */
 .setup-container {
-    width: 720px;
-    max-width: 90vw;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
     position: relative;
     z-index: 2;
 }

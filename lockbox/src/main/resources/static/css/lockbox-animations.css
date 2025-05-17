@@ -330,7 +330,6 @@ html:not(.animations-enabled) .typing {
   animation: none !important;
   opacity: 1 !important;
   transform: none !important;
-  width: auto !important;
 }
 
 /* Ensure animations start from the correct state when enabled */

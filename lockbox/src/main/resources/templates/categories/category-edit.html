@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en" data-theme="light">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Category</title>
+    <title>Edit Category</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
     <link rel="icon" type="image/png" th:href="@{/images/favicon.png}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -46,11 +46,12 @@
                 <div class="container">
                     <div class="card">
                         <div class="card-header">
-                            <h2>Add Category</h2>
+                            <h2>Edit Category</h2>
                         </div>
                         <div class="card-body">
-                            <form th:action="@{/categories}" th:object="${categoryCreationDto}" method="post">
+                            <form th:action="@{/categories/{id}(id=${category.id})}" th:object="${category}" method="post">
                                 <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+                                <input type="hidden" th:field="*{id}"/>
                                 
                                 <div class="form-group">
                                     <label for="name" class="required">Category Name</label>
@@ -67,7 +68,7 @@
                                 <div class="form-group">
                                     <label for="color">Color</label>
                                     <div class="color-input-container">
-                                        <input type="color" id="color" th:field="*{color}" class="form-control" value="#7C3AED">
+                                        <input type="color" id="color" th:field="*{color}" class="form-control" th:value="${category.color != null ? category.color : '#7C3AED'}">
                                         <div class="color-presets">
                                             <button type="button" class="color-preset" style="background-color: #7C3AED" onclick="setColor('#7C3AED')"></button>
                                             <button type="button" class="color-preset" style="background-color: #2563EB" onclick="setColor('#2563EB')"></button>
@@ -82,7 +83,7 @@
                                 
                                 <div class="form-actions">
                                     <a th:href="@{/categories}" class="btn btn-secondary">Cancel</a>
-                                    <button type="submit" class="btn btn-primary">Create Category</button>
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
                                 </div>
                             </form>
                         </div>
