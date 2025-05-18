@@ -267,11 +267,22 @@ public class PasswordViewController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public String listPasswords(Model model, Authentication authentication) {
         var user = userService.findByUsername(authentication.getName()).orElseThrow();
         
         // Get user's passwords
         List<Password> passwords = passwordService.findByUserId(user.getId());
+        
+        // Initialize categories and tags to prevent lazy loading issues
+        passwords.forEach(password -> {
+            if (password.getCategory() != null) {
+                password.getCategory().getColor(); // Force initialization
+            }
+            if (password.getTags() != null) {
+                password.getTags().size(); // Force initialization
+            }
+        });
         
         // Use a map to cache already checked passwords to avoid duplicate API calls
         Map<String, Integer> checkedPasswords = new HashMap<>();

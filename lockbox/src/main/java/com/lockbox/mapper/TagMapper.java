@@ -28,6 +28,7 @@ public class TagMapper {
         TagDto dto = new TagDto();
         dto.setId(tag.getId());
         dto.setName(tag.getName());
+        dto.setColor(tag.getColor());
         dto.setUserId(tag.getUser().getId());
         dto.setCreatedAt(tag.getCreatedAt());
         dto.setUpdatedAt(tag.getUpdatedAt());

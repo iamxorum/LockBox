@@ -20,6 +20,7 @@ public class SecureNoteDto {
     private String content;
     private Long categoryId;
     private String categoryName;
+    private String categoryColor;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Set<TagDto> tags = new HashSet<>();

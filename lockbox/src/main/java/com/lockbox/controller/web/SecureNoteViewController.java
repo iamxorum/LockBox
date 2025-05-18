@@ -195,7 +195,12 @@ public class SecureNoteViewController {
             // Initialize tags for each note to prevent lazy loading issues
             notes.forEach(note -> {
                 if (note.getTags() != null) {
-                    note.getTags().size(); // Force initialization of tags
+                    note.getTags().forEach(tag -> {
+                        tag.getColor(); // Force initialization of tag color
+                    });
+                }
+                if (note.getCategory() != null) {
+                    note.getCategory().getColor(); // Force initialization of category color
                 }
             });
             
@@ -207,6 +212,7 @@ public class SecureNoteViewController {
                         // Initialize the category to prevent lazy loading issues
                         Category category = note.getCategory();
                         dto.setCategoryName(category.getName());
+                        dto.setCategoryColor(category.getColor());
                     }
                     // Map tags
                     dto.setTags(note.getTags().stream()

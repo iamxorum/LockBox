@@ -21,10 +21,10 @@ public interface SecureNoteRepository extends JpaRepository<SecureNote, Long> {
     
     List<SecureNote> findByUserIdAndContentContainingIgnoreCase(Long userId, String content);
     
-    @Query("SELECT DISTINCT n FROM SecureNote n LEFT JOIN FETCH n.tags WHERE n.user.id = :userId")
+    @Query("SELECT DISTINCT n FROM SecureNote n LEFT JOIN FETCH n.category c LEFT JOIN FETCH n.tags t LEFT JOIN FETCH t.user WHERE n.user.id = :userId")
     List<SecureNote> findByUserIdWithTags(@PathVariable("userId") Long userId);
     
-    @Query("SELECT DISTINCT n FROM SecureNote n LEFT JOIN FETCH n.tags WHERE n.id = :id")
+    @Query("SELECT DISTINCT n FROM SecureNote n LEFT JOIN FETCH n.category c LEFT JOIN FETCH n.tags t LEFT JOIN FETCH t.user WHERE n.id = :id")
     Optional<SecureNote> findByIdWithTags(@PathVariable("id") Long id);
 
     long countByUserId(Long userId);

@@ -26,22 +26,30 @@ public class SecureNoteMapper {
         this.tagMapper = tagMapper;
     }
     
-    public SecureNoteDto toDto(SecureNote entity) {
-        if (entity == null) {
+    public SecureNoteDto toDto(SecureNote note) {
+        if (note == null) {
             return null;
         }
 
         SecureNoteDto dto = new SecureNoteDto();
-        dto.setId(entity.getId());
-        dto.setTitle(entity.getTitle());
-        dto.setContent(entity.getContent());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-        dto.setCategoryId(entity.getCategory() != null ? entity.getCategory().getId() : null);
-        dto.setUserId(entity.getUser() != null ? entity.getUser().getId() : null);
-        dto.setTagIds(entity.getTags().stream()
-                .map(Tag::getId)
-                .collect(Collectors.toList()));
+        dto.setId(note.getId());
+        dto.setTitle(note.getTitle());
+        dto.setContent(note.getContent());
+        dto.setCreatedAt(note.getCreatedAt());
+        dto.setUpdatedAt(note.getUpdatedAt());
+        dto.setUserId(note.getUser().getId());
+        
+        if (note.getCategory() != null) {
+            dto.setCategoryId(note.getCategory().getId());
+            dto.setCategoryName(note.getCategory().getName());
+            dto.setCategoryColor(note.getCategory().getColor());
+        }
+        
+        if (note.getTags() != null) {
+            dto.setTags(note.getTags().stream()
+                .map(tagMapper::toDto)
+                .collect(Collectors.toSet()));
+        }
 
         return dto;
     }
