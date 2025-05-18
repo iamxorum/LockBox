@@ -714,40 +714,44 @@
                 // Apply initial styling
                 styleSelectedOption();
                 
+                // Style all options initially
+                Array.from(categorySelect.options).forEach((option, index) => {
+                    if (index === 0) return; // Skip the placeholder option
+                    const color = option.getAttribute('data-color') || '#3b82f6';
+                    option.style.backgroundColor = color;
+                    option.style.opacity = '0.85';
+                    option.style.color = '#ffffff';
+                });
+                
                 // Update styling when selection changes
                 categorySelect.addEventListener('change', styleSelectedOption);
                 
+                // Update styling when theme changes
+                document.documentElement.addEventListener('data-theme-changed', styleSelectedOption);
+                
                 function styleSelectedOption() {
                     const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-                    const color = selectedOption.getAttribute('data-color') || '#3b82f6';
+                    const hasValue = categorySelect.value !== '';
+                    const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
                     
-                    // Reset all options
-                    Array.from(categorySelect.options).forEach(option => {
-                        option.style.backgroundColor = '';
-                        option.style.color = '';
-                    });
+                    // Update data attribute for styling
+                    categorySelect.setAttribute('data-has-value', hasValue);
                     
-                    // Style selected option
-                    if (categorySelect.value) {
-                        // Apply styles to the select element itself
-                        categorySelect.style.backgroundColor = color + '40'; // 40% opacity for better visibility
-                        categorySelect.style.color = '#ffffff'; // White text
-                        categorySelect.style.borderColor = color;
+                    if (hasValue) {
+                        const color = selectedOption.getAttribute('data-color') || '#3b82f6';
+                        categorySelect.style.backgroundColor = color;
+                        categorySelect.style.opacity = '0.85';
+                        categorySelect.style.color = '#ffffff';
+                        categorySelect.style.borderColor = 'transparent';
                         
-                        // Change the dropdown arrow to white for better visibility
+                        // Update the dropdown arrow color
                         categorySelect.style.backgroundImage = `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`;
-                        
-                        // Style the selected option for dropdown
-                        selectedOption.style.backgroundColor = color;
-                        selectedOption.style.color = '#ffffff';
                     } else {
-                        // Reset styles if no category selected - keep transparent background
-                        categorySelect.style.backgroundColor = 'transparent';
-                        categorySelect.style.color = '#ffffff'; // White text
-                        categorySelect.style.borderColor = 'var(--border-color, #ced4da)';
-                        
-                        // Set arrow color to white
-                        categorySelect.style.backgroundImage = `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`;
+                        categorySelect.style.backgroundColor = '';
+                        categorySelect.style.opacity = '';
+                        categorySelect.style.color = isDarkMode ? '#ffffff' : '#000000';
+                        categorySelect.style.borderColor = '';
+                        categorySelect.style.backgroundImage = '';
                     }
                 }
             }
