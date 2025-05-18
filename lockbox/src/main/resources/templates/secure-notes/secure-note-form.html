@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en" data-theme="light">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,18 +18,7 @@
     <!-- Bootstrap JS only -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script th:src="@{/js/theme.js}"></script>
-    <!-- Minimal theme setup script - just to handle user preference -->
-    <script>
-        // Set initial theme based on saved preference or system preference
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (savedTheme) {
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        } else if (systemPrefersDark) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-    </script>
+    <script th:replace="~{fragments/theme :: theme-script}"></script>
     <style>
         /* Category Select Styling */
         .category-select {

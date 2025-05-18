@@ -11,18 +11,7 @@
     <link rel="stylesheet" th:href="@{/css/lockbox-sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/lockbox-forms.css}">
     <link rel="stylesheet" th:href="@{/css/lockbox-animations.css}">
-    <!-- Theme setup script -->
-    <script>
-        // Set initial theme based on saved preference or system preference
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (savedTheme) {
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        } else if (systemPrefersDark) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-    </script>
+    <script th:replace="~{fragments/theme :: theme-script}"></script>
 </head>
 <body class="dashboard-body">
     <div class="sidebar-toggle" id="sidebarToggle">
@@ -68,14 +57,14 @@
                                 <div class="form-group">
                                     <label for="color">Color</label>
                                     <div class="color-input-container">
-                                        <input type="color" id="color" th:field="*{color}" class="form-control" th:value="${category.color != null ? category.color : '#7C3AED'}">
+                                        <input type="color" id="color" th:field="*{color}" class="form-control" th:value="${category.color != null ? category.color : '#3b82f6'}">
                                         <div class="color-presets">
-                                            <button type="button" class="color-preset" style="background-color: #7C3AED" onclick="setColor('#7C3AED')"></button>
-                                            <button type="button" class="color-preset" style="background-color: #2563EB" onclick="setColor('#2563EB')"></button>
+                                            <button type="button" class="color-preset" style="background-color: #3b82f6" onclick="setColor('#3b82f6')"></button>
+                                            <button type="button" class="color-preset" style="background-color: #2563eb" onclick="setColor('#2563eb')"></button>
                                             <button type="button" class="color-preset" style="background-color: #059669" onclick="setColor('#059669')"></button>
-                                            <button type="button" class="color-preset" style="background-color: #DC2626" onclick="setColor('#DC2626')"></button>
-                                            <button type="button" class="color-preset" style="background-color: #D97706" onclick="setColor('#D97706')"></button>
-                                            <button type="button" class="color-preset" style="background-color: #4B5563" onclick="setColor('#4B5563')"></button>
+                                            <button type="button" class="color-preset" style="background-color: #dc2626" onclick="setColor('#dc2626')"></button>
+                                            <button type="button" class="color-preset" style="background-color: #d97706" onclick="setColor('#d97706')"></button>
+                                            <button type="button" class="color-preset" style="background-color: #4b5563" onclick="setColor('#4b5563')"></button>
                                         </div>
                                     </div>
                                     <div class="error-message" th:if="${#fields.hasErrors('color')}" th:errors="*{color}"></div>
@@ -121,51 +110,5 @@
             document.getElementById('color').value = color;
         }
     </script>
-
-    <style>
-        .color-input-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        input[type="color"] {
-            width: 100%;
-            height: 40px;
-            padding: 0;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            cursor: pointer;
-        }
-
-        input[type="color"]::-webkit-color-swatch-wrapper {
-            padding: 0;
-        }
-
-        input[type="color"]::-webkit-color-swatch {
-            border: none;
-            border-radius: calc(var(--radius) - 1px);
-        }
-
-        .color-presets {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .color-preset {
-            width: 32px;
-            height: 32px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            cursor: pointer;
-            padding: 0;
-            transition: all 0.2s ease;
-        }
-
-        .color-preset:hover {
-            transform: scale(1.1);
-        }
-    </style>
 </body>
 </html> 

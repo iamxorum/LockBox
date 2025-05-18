@@ -29,7 +29,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.HashMap;
@@ -194,19 +193,6 @@ public class PasswordViewController {
         }
     }
     
-    private boolean passwordWasChanged(Password password) {
-        if (password.getId() == null) {
-            return true; // New password
-        }
-        
-        Password existingPassword = passwordService.findById(password.getId()).orElse(null);
-        if (existingPassword == null) {
-            return true; // Can't find existing, treat as new
-        }
-        
-        return !Objects.equals(existingPassword.getPasswordValue(), password.getPasswordValue());
-    }
-    
     /**
      * Checks password strength and returns a warning message if the password is weak
      * @param password the password to check
@@ -237,33 +223,6 @@ public class PasswordViewController {
         return null; // No warning needed
     }
     
-    // Keep the old validatePasswordStrength method for now for backward compatibility
-    private void validatePasswordStrength(String password, BindingResult bindingResult) {
-        // If password is empty (when editing and not changing password), skip validation
-        if (password == null || password.isEmpty()) {
-            return;
-        }
-        
-        // Check minimum length
-        if (password.length() < 8) {
-            bindingResult.rejectValue("password", "password.tooWeak", 
-                "Password must be at least 8 characters long");
-            return;
-        }
-        
-        // Check for complexity (at least 3 out of 4 categories)
-        int categories = 0;
-        if (password.matches(".*[a-z].*")) categories++; // lowercase
-        if (password.matches(".*[A-Z].*")) categories++; // uppercase
-        if (password.matches(".*[0-9].*")) categories++; // digits
-        if (password.matches(".*[^a-zA-Z0-9].*")) categories++; // special chars
-        
-        if (categories < 3) {
-            bindingResult.rejectValue("password", "password.tooWeak", 
-                "Password must contain at least 3 of the following: lowercase letters, uppercase letters, numbers, and special characters");
-        }
-    }
-
     @GetMapping("/edit/{id}")
     @Transactional(readOnly = true)
     public String showEditForm(@PathVariable Long id, Model model, Authentication authentication, RedirectAttributes redirectAttributes) {

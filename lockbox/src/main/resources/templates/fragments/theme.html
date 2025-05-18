@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <!-- Theme setup script -->
+    <script th:fragment="theme-script">
+        // Set initial theme based on saved preference or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        } else if (systemPrefersDark) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+</head>
+<body>
+</body>
+</html> 

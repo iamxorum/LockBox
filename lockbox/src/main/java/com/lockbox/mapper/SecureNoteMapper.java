@@ -5,15 +5,12 @@ import com.lockbox.domain.model.SecureNote;
 import com.lockbox.domain.model.Tag;
 import com.lockbox.dto.SecureNoteCreationDto;
 import com.lockbox.dto.SecureNoteDto;
-import com.lockbox.dto.TagDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.hibernate.Hibernate;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Collections;
 

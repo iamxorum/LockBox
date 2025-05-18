@@ -1,6 +1,7 @@
 package com.lockbox.domain.service.impl;
 
 import com.lockbox.domain.repository.TagRepository;
+import com.lockbox.domain.repository.PasswordRepository;
 import com.lockbox.domain.model.Tag;
 import com.lockbox.domain.service.TagService;
 
@@ -8,16 +9,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TagServiceImpl implements TagService {
 
     private final TagRepository tagRepository;
+    private final PasswordRepository passwordRepository;
     
     @Autowired
-    public TagServiceImpl(TagRepository tagRepository) {
+    public TagServiceImpl(TagRepository tagRepository, PasswordRepository passwordRepository) {
         this.tagRepository = tagRepository;
+        this.passwordRepository = passwordRepository;
     }
     
     @Override
@@ -68,5 +73,15 @@ public class TagServiceImpl implements TagService {
     @Override
     public List<Tag> findAllById(Iterable<Long> ids) {
         return tagRepository.findAllById(ids);
+    }
+    
+    @Override
+    public Map<Long, Long> getPasswordCountsByTag(Long userId) {
+        return passwordRepository.countPasswordsByTag(userId)
+                .stream()
+                .collect(Collectors.toMap(
+                    row -> (Long) row[0],  // tagId
+                    row -> (Long) row[1]   // count
+                ));
     }
 } 

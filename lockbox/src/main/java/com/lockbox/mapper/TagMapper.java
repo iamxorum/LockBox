@@ -36,33 +36,24 @@ public class TagMapper {
     }
     
     public Tag toEntity(TagCreationDto dto) {
-        if (dto == null) {
-            return null;
-        }
-        
-        User user = userService.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", dto.getUserId()));
-        
         Tag tag = new Tag();
         tag.setName(dto.getName());
-        tag.setUser(user);
+        tag.setDescription(dto.getDescription());
+        tag.setColor(dto.getColor());
+        
+        // Set the user
+        if (dto.getUserId() != null) {
+            User user = userService.findById(dto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", dto.getUserId()));
+            tag.setUser(user);
+        }
         
         return tag;
     }
     
     public void updateEntityFromDto(TagCreationDto dto, Tag tag) {
-        if (dto == null || tag == null) {
-            return;
-        }
-        
-        if (dto.getName() != null) {
-            tag.setName(dto.getName());
-        }
-        
-        if (dto.getUserId() != null) {
-            User user = userService.findById(dto.getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User", "id", dto.getUserId()));
-            tag.setUser(user);
-        }
+        tag.setName(dto.getName());
+        tag.setDescription(dto.getDescription());
+        tag.setColor(dto.getColor());
     }
 } 

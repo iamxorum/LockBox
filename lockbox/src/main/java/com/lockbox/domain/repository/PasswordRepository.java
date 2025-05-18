@@ -42,4 +42,7 @@ public interface PasswordRepository extends JpaRepository<Password, Long> {
     
     @Query("SELECT p.category.id as categoryId, COUNT(p) as count FROM Password p WHERE p.user.id = :userId GROUP BY p.category.id")
     List<Object[]> countPasswordsByCategory(@Param("userId") Long userId);
+    
+    @Query("SELECT t.id as tagId, COUNT(p) as count FROM Password p JOIN p.tags t WHERE p.user.id = :userId GROUP BY t.id")
+    List<Object[]> countPasswordsByTag(@Param("userId") Long userId);
 } 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en" data-theme="light">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,18 +13,7 @@
     <link rel="stylesheet" th:href="@{/css/lockbox-tables.css}">
     <link rel="stylesheet" th:href="@{/css/lockbox-animations.css}">
     <link rel="stylesheet" th:href="@{/css/lockbox-dashboard.css}">
-    <!-- Theme setup script -->
-    <script>
-        // Set initial theme based on saved preference or system preference
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (savedTheme) {
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        } else if (systemPrefersDark) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-    </script>
+    <script th:replace="~{fragments/theme :: theme-script}"></script>
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>

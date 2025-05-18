@@ -136,7 +136,6 @@ public class SecureNoteViewController {
             logger.info("Saving note with {} tags", secureNote.getTags().size());
             SecureNote savedNote = secureNoteService.save(secureNote);
             logger.info("Saved note. Tags after save: {}", savedNote.getTags().size());
-            SecureNoteDto savedNoteDto = secureNoteMapper.toDto(savedNote);
             
             auditLogService.createAuditLog(user.getId(), "CREATE_NOTE", "SecureNote", savedNote.getId(), "Note created");
             

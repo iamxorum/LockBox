@@ -189,14 +189,6 @@ public class CategoryViewController {
         }
     }
 
-    private String getRedirectUrl(HttpServletRequest request) {
-        String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isEmpty()) {
-            return "redirect:" + referer.substring(referer.indexOf("/", 8));
-        }
-        return "redirect:/";
-    }
-
     /**
      * Alternative endpoint that accepts JSON for AJAX requests
      */
