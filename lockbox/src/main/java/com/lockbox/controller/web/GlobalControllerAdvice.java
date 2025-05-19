@@ -1,4 +1,4 @@
-package com.lockbox.web.controller;
+package com.lockbox.controller.web;
 
 import com.lockbox.domain.service.AppSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;

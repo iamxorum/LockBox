@@ -1,4 +1,4 @@
-package com.lockbox.web.controller;
+package com.lockbox.controller.web;
 
 import com.lockbox.domain.model.AppSettings;
 import com.lockbox.domain.model.User;
