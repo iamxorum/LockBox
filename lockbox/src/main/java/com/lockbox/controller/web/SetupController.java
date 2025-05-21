@@ -104,6 +104,13 @@ public class SetupController {
             adminUser.addRole("ADMIN");
             userService.save(adminUser);
 
+            // Format app name to ensure it keeps the LockBox format
+            String orgName = appSettings.getAppName().trim();
+            // Don't duplicate "LockBox" prefix if it's already there
+            if (!orgName.startsWith("LockBox")) {
+                appSettings.setAppName("LockBox " + orgName);
+            }
+            
             // Update and save app settings
             appSettingsService.updateSettings(appSettings);
             appSettingsService.completeSetup();

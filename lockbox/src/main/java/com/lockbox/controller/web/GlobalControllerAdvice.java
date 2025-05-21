@@ -18,10 +18,14 @@ public class GlobalControllerAdvice {
     @ModelAttribute("organization")
     public String addOrganization() {
         String appName = appSettingsService.getAppSettings().getAppName();
-        if (appName != null && appName.contains("LockBox")) {
-            // Extract organization name from app name
-            return appName.replace("LockBox", "").trim();
+        
+        // Extract organization name from app name
+        if (appName != null && appName.startsWith("LockBox")) {
+            // Format is expected to be "LockBox OrgName"
+            String orgName = appName.substring("LockBox".length()).trim();
+            return orgName.isEmpty() ? null : orgName;
         }
+        
         return null;
     }
 } 
