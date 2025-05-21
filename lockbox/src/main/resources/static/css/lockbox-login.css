@@ -312,7 +312,7 @@
   /* Login Container */
   .login-container {
     width: 100%;
-    max-width: 360px;
+    max-width: 40rem;
     margin: 0 auto;
     position: relative;
     z-index: 2;
