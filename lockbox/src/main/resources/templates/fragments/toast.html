@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+    <!-- Toast Scripts Fragment -->
+    <th:block th:fragment="toast-scripts">
+        <script th:src="@{/js/toast.js}"></script>
+        
+        <!-- Show toasts if there are flash attributes -->
+        <script th:if="${successMessage != null || errorMessage != null}">
+            document.addEventListener('DOMContentLoaded', function() {
+                // Success message
+                const successMessage = "[[${successMessage}]]";
+                if (successMessage && successMessage.trim() !== '') {
+                    Toast.success(successMessage);
+                }
+                
+                // Error message
+                const errorMessage = "[[${errorMessage}]]";
+                if (errorMessage && errorMessage.trim() !== '') {
+                    Toast.error(errorMessage);
+                }
+            });
+        </script>
+    </th:block>
+    
+    <!-- Toast Initialization Fragment -->
+    <th:block th:fragment="toast-init">
+        <script>
+            // Wait for DOM to be fully loaded
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize Toast system
+                Toast.init();
+                
+                // Show message if redirected with success/error params in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const successMsg = urlParams.get('success');
+                const errorMsg = urlParams.get('error');
+                
+                if (successMsg) {
+                    Toast.success(decodeURIComponent(successMsg));
+                    
+                    // Remove the success parameter from URL without reloading
+                    urlParams.delete('success');
+                    const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+                
+                if (errorMsg) {
+                    Toast.error(decodeURIComponent(errorMsg));
+                    
+                    // Remove the error parameter from URL without reloading
+                    urlParams.delete('error');
+                    const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+            });
+        </script>
+    </th:block>
+</body>
+</html> 

@@ -60,6 +60,7 @@ public class CategoryViewController {
         categoryDto.setUserId(user.getId());
         
         model.addAttribute("categoryCreationDto", categoryDto);
+        model.addAttribute("category", new Category());
         return "categories/category-form";
     }
 

@@ -14,31 +14,8 @@
     <link rel="stylesheet" th:href="@{/css/lockbox-tables.css}">
     <link rel="stylesheet" th:href="@{/css/lockbox-animations.css}">
     <script th:replace="~{fragments/theme :: theme-script}"></script>
+    <th:block th:replace="~{fragments/toast :: toast-scripts}"></th:block>
     <style>
-        /* Toast notifications */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 14px;
-            color: white;
-            z-index: 1000;
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.3s, transform 0.3s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            display: flex;
-            align-items: center;
-            max-width: 350px;
-        }
-        
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
         /* Category table styles */
         table {
             width: 100%;
@@ -644,14 +621,7 @@
                     confirmBtn.innerHTML = 'Delete';
                     modal.classList.remove('show');
                     
-                    const toast = document.createElement('div');
-                    toast.className = 'toast error show';
-                    toast.textContent = 'Error: ' + error.message;
-                    document.querySelector('.toast-container').appendChild(toast);
-                    
-                    setTimeout(() => {
-                        toast.remove();
-                    }, 3000);
+                    Toast.error('Error: ' + error.message);
                 }
             };
         }

@@ -14,6 +14,7 @@
     <link rel="stylesheet" th:href="@{/css/lockbox-tables.css}">
     <link rel="stylesheet" th:href="@{/css/lockbox-animations.css}">
     <script th:replace="~{fragments/theme :: theme-script}"></script>
+    <th:block th:replace="~{fragments/toast :: toast-scripts}"></th:block>
     <style>
         /* Table styles */
         table {
@@ -317,11 +318,6 @@
         </div>
     </div>
 
-    <!-- Toast notifications -->
-    <div class="toast-container">
-        <div class="toast" id="toast"></div>
-    </div>
-
     <!-- Delete Confirmation Modal -->
     <div class="modal-backdrop" id="deleteModal">
         <div class="modal-dialog">
@@ -353,59 +349,11 @@
             const errorMessage = /*[[${error}]]*/ null;
             
             if (successMessage) {
-                showToast(successMessage, 'success');
+                Toast.success(successMessage);
             }
             
             if (errorMessage) {
-                showToast(errorMessage, 'error');
-            }
-            
-            // Enhanced toast notification function
-            function showToast(message, type = 'info') {
-                // Create a new toast element
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                
-                // Add close button
-                const closeBtn = document.createElement('button');
-                closeBtn.className = 'toast-close';
-                closeBtn.innerHTML = '×';
-                closeBtn.addEventListener('click', () => {
-                    toast.classList.remove('show');
-                    toast.classList.add('hide');
-                    setTimeout(() => {
-                        toast.remove();
-                    }, 400); // Match animation duration
-                });
-                
-                // Create toast content
-                toast.textContent = message;
-                toast.appendChild(closeBtn);
-                
-                // Add to container
-                const container = document.querySelector('.toast-container');
-                container.appendChild(toast);
-                
-                // Show the toast
-                setTimeout(() => {
-                    toast.classList.add('show');
-                }, 10);
-                
-                // Auto dismiss after delay
-                const dismissDelay = type === 'warning' ? 8000 : 5000;
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.classList.remove('show');
-                        toast.classList.add('hide');
-                        setTimeout(() => {
-                            if (toast.parentNode) {
-                                toast.remove();
-                            }
-                        }, 400);
-                    }
-                }, dismissDelay);
-                
-                return toast;
+                Toast.error(errorMessage);
             }
 
             // Handle delete buttons
@@ -460,10 +408,7 @@
                                 modal.classList.remove('show');
                                 
                                 // Show success message
-                                const toast = document.createElement('div');
-                                toast.className = 'toast success show';
-                                toast.textContent = 'Secure note deleted successfully';
-                                document.querySelector('.toast-container').appendChild(toast);
+                                Toast.success('Secure note deleted successfully');
                                 
                                 // Reload after animation
                                 setTimeout(() => {
@@ -479,10 +424,7 @@
                             modal.classList.remove('show');
                             
                             // Show error message
-                            const toast = document.createElement('div');
-                            toast.className = 'toast error show';
-                            toast.textContent = 'Error: ' + error.message;
-                            document.querySelector('.toast-container').appendChild(toast);
+                            Toast.error('Error: ' + error.message);
                         }
                     };
                 });

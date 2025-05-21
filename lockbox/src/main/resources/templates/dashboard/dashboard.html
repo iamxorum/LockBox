@@ -37,7 +37,7 @@
             <div class="main-content">
                 <div class="page-header">
                     <div class="header-content static-appear">
-                        <h1 class="greeting">Welcome, <span class="username" th:text="${user.username}">admin</span></h1>
+                        <h1 class="greeting">Welcome, <span class="username" th:text="${user.firstName} + ' ' + ${user.lastName}">admin</span></h1>
                         <p class="text-muted">Here's what's happening with your secure data today.</p>
                     </div>
                     
