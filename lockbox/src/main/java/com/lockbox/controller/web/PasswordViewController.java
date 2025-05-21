@@ -12,6 +12,7 @@ import com.lockbox.domain.service.TagService;
 import com.lockbox.domain.service.UserService;
 import com.lockbox.dto.PasswordCreationDto;
 import com.lockbox.mapper.PasswordMapper;
+import com.lockbox.security.SecurityEventListener.AuditActions;
 
 import jakarta.validation.Valid;
 
@@ -170,7 +171,7 @@ public class PasswordViewController {
             Password savedPassword = passwordService.save(password);
             
             // Log the activity
-            String action = isNew ? "PASSWORD_CREATED" : "PASSWORD_UPDATED";
+            String action = isNew ? AuditActions.PASSWORD_CREATED : AuditActions.PASSWORD_UPDATED;
             auditLogService.createAuditLog(
                 user.getId(),
                 action,
@@ -399,5 +400,82 @@ public class PasswordViewController {
         logger.error("Illegal argument exception", e);
         redirectAttributes.addFlashAttribute("error", e.getMessage());
         return "redirect:/passwords";
+    }
+
+    @GetMapping("/view/{id}")
+    @Transactional(readOnly = true)
+    public String viewPassword(@PathVariable Long id, Model model, Authentication authentication, RedirectAttributes redirectAttributes) {
+        // Get the authenticated user
+        var user = userService.findByUsername(authentication.getName()).orElseThrow();
+        
+        try {
+            // Get the password with tags
+            Password password = passwordService.findByIdWithTags(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid password Id:" + id));
+                
+            // Security check - ensure user owns this password
+            if (!password.getUser().getId().equals(user.getId())) {
+                throw new SecurityException("Not authorized to view this password");
+            }
+            
+            // Log password view for audit
+            auditLogService.createAuditLog(
+                user.getId(),
+                AuditActions.PASSWORD_VIEWED,
+                "Password",
+                password.getId(),
+                "Password entry viewed: " + password.getTitle()
+            );
+            
+            // Add password to model
+            model.addAttribute("password", passwordMapper.toDto(password));
+            model.addAttribute("currentUserId", user.getId());
+            
+            return "passwords/password-view";
+        } catch (Exception e) {
+            logger.error("Error viewing password", e);
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/passwords";
+        }
+    }
+    
+    @PostMapping("/delete/{id}")
+    @Transactional
+    public String deletePassword(@PathVariable Long id, Authentication authentication, RedirectAttributes redirectAttributes) {
+        // Get the authenticated user
+        var user = userService.findByUsername(authentication.getName()).orElseThrow();
+        
+        try {
+            // Get the password
+            Password password = passwordService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid password Id:" + id));
+                
+            // Security check - ensure user owns this password
+            if (!password.getUser().getId().equals(user.getId())) {
+                throw new SecurityException("Not authorized to delete this password");
+            }
+            
+            // Store password info for audit log before deletion
+            String passwordTitle = password.getTitle();
+            
+            // Delete the password
+            passwordService.delete(password);
+            
+            // Log password deletion for audit
+            auditLogService.createAuditLog(
+                user.getId(),
+                AuditActions.PASSWORD_DELETED,
+                "Password",
+                id,
+                "Password entry deleted: " + passwordTitle
+            );
+            
+            redirectAttributes.addFlashAttribute("success", "Password deleted successfully");
+            return "redirect:/passwords";
+        } catch (Exception e) {
+            logger.error("Error deleting password", e);
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/passwords";
+        }
     }
 } 

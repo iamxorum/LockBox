@@ -13,6 +13,7 @@ import com.lockbox.domain.service.UserService;
 import com.lockbox.domain.service.TagService;
 import com.lockbox.mapper.SecureNoteMapper;
 import com.lockbox.mapper.TagMapper;
+import com.lockbox.security.SecurityEventListener.AuditActions;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +138,7 @@ public class SecureNoteViewController {
             SecureNote savedNote = secureNoteService.save(secureNote);
             logger.info("Saved note. Tags after save: {}", savedNote.getTags().size());
             
-            auditLogService.createAuditLog(user.getId(), "CREATE_NOTE", "SecureNote", savedNote.getId(), "Note created");
+            auditLogService.createAuditLog(user.getId(), AuditActions.NOTE_CREATED, "SecureNote", savedNote.getId(), "Note created");
             
             redirectAttributes.addFlashAttribute("successMessage", "Secure note saved successfully");
             return "redirect:/secure-notes";
@@ -251,7 +252,7 @@ public class SecureNoteViewController {
             }
             
             secureNoteService.delete(note);
-            auditLogService.createAuditLog(user.getId(), "DELETE", "SecureNote", id, "Note deleted");
+            auditLogService.createAuditLog(user.getId(), AuditActions.NOTE_DELETED, "SecureNote", id, "Note deleted");
             
             redirectAttributes.addFlashAttribute("successMessage", "Secure note deleted successfully");
         } catch (Exception e) {
@@ -301,7 +302,7 @@ public class SecureNoteViewController {
             model.addAttribute("currentUserId", user.getId());
             
             // Log the view action
-            auditLogService.createAuditLog(user.getId(), "VIEW", "SecureNote", id, "Note viewed");
+            auditLogService.createAuditLog(user.getId(), AuditActions.NOTE_VIEWED, "SecureNote", id, "Note viewed");
             
             return "secure-notes/secure-note-view";
         } catch (Exception e) {

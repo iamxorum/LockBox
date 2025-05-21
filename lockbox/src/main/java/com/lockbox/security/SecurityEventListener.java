@@ -21,10 +21,62 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Optional;
 
+/**
+ * This class handles security-related events and logs them for audit purposes.
+ */
 @Component
 public class SecurityEventListener {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityEventListener.class);
+    
+    /**
+     * Constants for audit action types to maintain consistency across the application
+     */
+    public static final class AuditActions {
+        // Authentication related actions
+        public static final String SUCCESSFUL_AUTHENTICATION = "Successful Authentication";
+        public static final String FAILED_AUTHENTICATION = "Failed Authentication";
+        public static final String UNKNOWN_AUTHENTICATION_ATTEMPT = "Unknown Authentication Attempt";
+        public static final String USER_SIGNED_OUT = "User Signed Out";
+        public static final String ACCOUNT_LOCKED = "Account Locked";
+        public static final String PASSWORD_RESET_REQUESTED = "Password Reset Requested";
+        public static final String PASSWORD_CHANGED = "Password Changed";
+        public static final String PROFILE_UPDATED = "Profile Updated";
+        
+        // Password management actions
+        public static final String PASSWORD_CREATED = "Password Entry Created";
+        public static final String PASSWORD_UPDATED = "Password Entry Updated";
+        public static final String PASSWORD_DELETED = "Password Entry Deleted";
+        public static final String PASSWORD_VIEWED = "Password Entry Viewed";
+        public static final String PASSWORD_COPIED = "Password Copied";
+        
+        // Secure note actions
+        public static final String NOTE_CREATED = "Secure Note Created";
+        public static final String NOTE_UPDATED = "Secure Note Updated";
+        public static final String NOTE_DELETED = "Secure Note Deleted";
+        public static final String NOTE_VIEWED = "Secure Note Viewed";
+        
+        // Category and tag actions
+        public static final String CATEGORY_CREATED = "Category Created";
+        public static final String CATEGORY_UPDATED = "Category Updated";
+        public static final String CATEGORY_DELETED = "Category Deleted";
+        public static final String TAG_CREATED = "Tag Created";
+        public static final String TAG_UPDATED = "Tag Updated";
+        public static final String TAG_DELETED = "Tag Deleted";
+        
+        // Administrative actions
+        public static final String SETTINGS_UPDATED = "Settings Updated";
+        public static final String USER_CREATED = "User Created";
+        public static final String USER_UPDATED = "User Updated";
+        public static final String USER_DELETED = "User Deleted";
+        public static final String USER_VIEWED = "User Profile Viewed";
+        
+        // Security actions
+        public static final String SECURITY_SCAN_PERFORMED = "Security Scan Performed";
+        public static final String SECURITY_ALERT_TRIGGERED = "Security Alert Triggered";
+        public static final String DATA_EXPORTED = "Data Exported";
+        public static final String DATA_IMPORTED = "Data Imported";
+    }
     
     private final AuditLogService auditLogService;
     private final UserRepository userRepository;
@@ -78,10 +130,10 @@ public class SecurityEventListener {
             if (user.isPresent()) {
                 safelyStoreAuditLog(
                         user.get().getId(),
-                        "LOGIN_SUCCESS",
+                        AuditActions.SUCCESSFUL_AUTHENTICATION,
                         "SECURITY",
                         null,
-                        "Login success from IP: " + remoteAddress
+                        "Authentication successful from IP: " + remoteAddress
                 );
             }
         } catch (Exception e) {
@@ -104,10 +156,10 @@ public class SecurityEventListener {
             if (user.isPresent()) {
                 safelyStoreAuditLog(
                         user.get().getId(),
-                        "LOGIN_FAILURE",
+                        AuditActions.FAILED_AUTHENTICATION,
                         "SECURITY",
                         null,
-                        "Login failure from IP: " + remoteAddress + ", Reason: Bad credentials"
+                        "Authentication failed from IP: " + remoteAddress + ", Reason: Invalid credentials"
                 );
             } else {
                 User adminUser = userRepository.findByUsername("admin")
@@ -116,10 +168,10 @@ public class SecurityEventListener {
                 if (adminUser != null) {
                     safelyStoreAuditLog(
                             adminUser.getId(),
-                            "UNKNOWN_LOGIN_ATTEMPT",
+                            AuditActions.UNKNOWN_AUTHENTICATION_ATTEMPT,
                             "SECURITY",
                             null,
-                            "Unknown username login attempt: " + username + ", IP: " + remoteAddress
+                            "Authentication attempt with unknown account: " + username + ", IP: " + remoteAddress
                     );
                 }
             }
@@ -143,10 +195,10 @@ public class SecurityEventListener {
             if (user.isPresent()) {
                 safelyStoreAuditLog(
                         user.get().getId(),
-                        "LOGOUT",
+                        AuditActions.USER_SIGNED_OUT,
                         "SECURITY",
                         null,
-                        "Logout from IP: " + remoteAddress
+                        "User signed out from IP: " + remoteAddress
                 );
             }
         } catch (Exception e) {

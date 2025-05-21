@@ -1,9 +1,11 @@
 package com.lockbox.controller.web;
 
 import com.lockbox.domain.model.User;
+import com.lockbox.domain.service.AuditLogService;
 import com.lockbox.domain.service.UserService;
 import com.lockbox.dto.UserCreationDto;
 import com.lockbox.mapper.UserMapper;
+import com.lockbox.security.SecurityEventListener.AuditActions;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,15 +33,18 @@ public class AdminUserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService;
 
     @Autowired
     public AdminUserController(
             UserService userService,
             UserMapper userMapper,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            AuditLogService auditLogService) {
         this.userService = userService;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.auditLogService = auditLogService;
     }
 
     @GetMapping
@@ -64,7 +69,8 @@ public class AdminUserController {
     public String createUser(
             @Valid @ModelAttribute("user") UserCreationDto userDto,
             BindingResult bindingResult,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            Authentication authentication) {
         
         if (bindingResult.hasErrors()) {
             return "users/user-form";
@@ -82,12 +88,24 @@ public class AdminUserController {
         }
         
         try {
+            // Get current admin user for audit logging
+            User adminUser = userService.findByUsername(authentication.getName()).orElseThrow();
+            
             // Create user
             User user = userMapper.toEntity(userDto);
             user.setPassword(passwordEncoder.encode(userDto.getPassword()));
             // Regular users only, not admins
             user.addRole("USER");
-            userService.save(user);
+            User savedUser = userService.save(user);
+            
+            // Log the user creation for audit
+            auditLogService.createAuditLog(
+                adminUser.getId(),
+                AuditActions.USER_CREATED,
+                "User",
+                savedUser.getId(),
+                "User created: " + savedUser.getUsername()
+            );
             
             redirectAttributes.addFlashAttribute("successMessage", "User created successfully");
             return "redirect:/users";
@@ -124,7 +142,8 @@ public class AdminUserController {
             @PathVariable("id") Long id,
             @Valid @ModelAttribute("user") UserCreationDto userDto,
             BindingResult bindingResult,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes,
+            Authentication authentication) {
         
         if (bindingResult.hasErrors()) {
             return "users/user-edit";
@@ -153,6 +172,12 @@ public class AdminUserController {
         }
         
         try {
+            // Get current admin user for audit logging
+            User adminUser = userService.findByUsername(authentication.getName()).orElseThrow();
+            
+            // Store original username for audit
+            String originalUsername = existingUser.getUsername();
+            
             // Update basic info
             existingUser.setUsername(userDto.getUsername());
             existingUser.setEmail(userDto.getEmail());
@@ -160,11 +185,26 @@ public class AdminUserController {
             existingUser.setLastName(userDto.getLastName());
             
             // Update password if provided
+            boolean passwordChanged = false;
             if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
                 existingUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
+                passwordChanged = true;
             }
             
             userService.save(existingUser);
+            
+            // Log the user update for audit
+            String details = "User updated: " + originalUsername;
+            if (passwordChanged) {
+                details += " (password was changed)";
+            }
+            auditLogService.createAuditLog(
+                adminUser.getId(),
+                AuditActions.USER_UPDATED,
+                "User",
+                existingUser.getId(),
+                details
+            );
             
             redirectAttributes.addFlashAttribute("successMessage", "User updated successfully");
             return "redirect:/users";
@@ -191,7 +231,23 @@ public class AdminUserController {
         }
         
         try {
+            // Get user information before deletion
+            User userToDelete = userService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            String deletedUsername = userToDelete.getUsername();
+            
+            // Delete the user
             userService.deleteById(id);
+            
+            // Log the user deletion for audit
+            auditLogService.createAuditLog(
+                currentUser.getId(),
+                AuditActions.USER_DELETED,
+                "User",
+                id,
+                "User deleted: " + deletedUsername
+            );
+            
             redirectAttributes.addFlashAttribute("successMessage", "User deleted successfully");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting user: " + e.getMessage());
@@ -228,6 +284,15 @@ public class AdminUserController {
                     "message", "User not found"
                 ));
         }
+        
+        // Log the password view for audit
+        auditLogService.createAuditLog(
+            currentUser.getId(),
+            AuditActions.PASSWORD_VIEWED,
+            "User",
+            id,
+            "Administrator viewed user password hash: " + targetUserOpt.get().getUsername()
+        );
         
         return ResponseEntity.ok(Map.of(
             "success", true,
