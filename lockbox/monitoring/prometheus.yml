@@ -1,0 +1,68 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # LockBox Service
+  - job_name: 'lockbox-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['lockbox-service:8080']
+    scrape_interval: 5s
+
+  # Eureka Server
+  - job_name: 'eureka-server'
+    static_configs:
+      - targets: ['eureka-server:8761']
+    scrape_interval: 15s
+
+  # Config Server
+  - job_name: 'config-server'
+    static_configs:
+      - targets: ['config-server:8888']
+    scrape_interval: 15s
+
+  # API Gateway
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8080']
+    scrape_interval: 15s
+
+  # PostgreSQL Database Metrics
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    scrape_timeout: 10s
+
+  # Redis Exporter (if available)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  # Service Discovery via Eureka
+  - job_name: 'eureka-discovery'
+    eureka_sd_configs:
+      - server: http://eureka-server:8761/eureka
+    relabel_configs:
+      - source_labels: [__meta_eureka_app_name]
+        target_label: job
+      - source_labels: [__meta_eureka_app_instance_metadata_management_port]
+        target_label: __address__
+        regex: (.+)
+        replacement: ${1}
+      - source_labels: [__address__, __meta_eureka_app_instance_metadata_management_port]
+        target_label: __address__
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2 

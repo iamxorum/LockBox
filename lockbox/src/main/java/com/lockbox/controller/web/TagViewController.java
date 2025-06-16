@@ -205,7 +205,7 @@ public class TagViewController {
     public ResponseEntity<?> createTagJson(@Valid @RequestBody TagCreationDto tagCreationDto, 
                                              HttpServletRequest request) {
         try {
-            System.out.println("Creating tag via JSON API: " + tagCreationDto.getName());
+            // Creating tag via JSON API
             User user = userService.findById(tagCreationDto.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 

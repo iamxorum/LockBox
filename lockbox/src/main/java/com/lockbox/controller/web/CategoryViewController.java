@@ -198,7 +198,7 @@ public class CategoryViewController {
     public ResponseEntity<?> createCategoryJson(@Valid @RequestBody CategoryCreationDto categoryCreationDto, 
                                              HttpServletRequest request) {
         try {
-            System.out.println("Creating category via JSON API: " + categoryCreationDto.getName());
+            // Creating category via JSON API
             User user = userService.findById(categoryCreationDto.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 

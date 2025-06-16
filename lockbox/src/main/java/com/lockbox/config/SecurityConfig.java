@@ -47,7 +47,8 @@ public class SecurityConfig {
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .ignoringRequestMatchers(
                     new AntPathRequestMatcher("/h2-console/**"),
-                    new AntPathRequestMatcher("/api/**")
+                    new AntPathRequestMatcher("/api/**"),
+                    new AntPathRequestMatcher("/actuator/**")
                 ));
                 
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
@@ -61,6 +62,12 @@ public class SecurityConfig {
             .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+            // Microservices endpoints
+            .requestMatchers(new AntPathRequestMatcher("/actuator/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/health/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/eureka/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/api/public/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/api/microservices/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/login")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/passwords/new")).authenticated()
@@ -104,7 +111,10 @@ public class SecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers(new AntPathRequestMatcher("/api/**")));
+                .ignoringRequestMatchers(
+                    new AntPathRequestMatcher("/api/**"),
+                    new AntPathRequestMatcher("/actuator/**")
+                ));
                 
         http.authorizeHttpRequests(auth -> auth
             // Static resources permissions
@@ -113,6 +123,12 @@ public class SecurityConfig {
             .requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+            // Microservices endpoints
+            .requestMatchers(new AntPathRequestMatcher("/actuator/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/health/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/eureka/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/api/public/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/api/microservices/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/login")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/passwords/new")).authenticated()
