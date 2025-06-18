@@ -13,20 +13,6 @@ services:
     networks:
       - lockbox-network
 
-  # API Gateway
-  api-gateway:
-    image: nginx:alpine
-    container_name: api-gateway
-    ports:
-      - "8080:80"
-    volumes:
-      - ./monitoring/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - eureka-server
-      - lockbox-service
-    networks:
-      - lockbox-network
-
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
@@ -168,7 +154,7 @@ services:
     build: .
     container_name: lockbox-service
     ports:
-      - "8081:8080"
+      - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka/
