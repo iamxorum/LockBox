@@ -12,29 +12,30 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  # LockBox Service
-  - job_name: 'lockbox-service'
+  # LockBox Service (Local Development)
+  - job_name: 'lockbox-service-local'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8080']
+    scrape_interval: 5s
+
+  # LockBox Service (Docker)
+  - job_name: 'lockbox-service-docker'
     metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['lockbox-service:8080']
     scrape_interval: 5s
 
-  # Eureka Server
+  # Eureka Server (when enabled)
   - job_name: 'eureka-server'
     static_configs:
       - targets: ['eureka-server:8761']
     scrape_interval: 15s
 
-  # Config Server
-  - job_name: 'config-server'
-    static_configs:
-      - targets: ['config-server:8888']
-    scrape_interval: 15s
-
-  # API Gateway
+  # API Gateway (Nginx)
   - job_name: 'api-gateway'
     static_configs:
-      - targets: ['api-gateway:8080']
+      - targets: ['api-gateway:80']
     scrape_interval: 15s
 
   # PostgreSQL Database Metrics

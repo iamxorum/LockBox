@@ -5,15 +5,23 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
@@ -37,6 +45,36 @@ public class SecurityConfig {
         builder.userDetailsService(userDetailsService)
                .passwordEncoder(passwordEncoder);
         return builder.build();
+    }
+
+    // Custom entry point for API requests
+    @Bean
+    public AuthenticationEntryPoint apiAuthenticationEntryPoint() {
+        return (request, response, authException) -> {
+            response.setContentType("application/json");
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
+        };
+    }
+
+    // Custom access denied handler for API requests
+    @Bean
+    public AccessDeniedHandler apiAccessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.setContentType("application/json");
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+            response.getWriter().write("{\"error\":\"Forbidden\",\"message\":\"Access denied\"}");
+        };
+    }
+
+    // Request matcher to identify API requests
+    private RequestMatcher isApiRequest() {
+        return (HttpServletRequest request) -> {
+            String uri = request.getRequestURI();
+            return uri.startsWith("/api/") || 
+                   uri.startsWith("/v3/api-docs") || 
+                   uri.startsWith("/swagger-ui");
+        };
     }
 
     @Bean
@@ -68,6 +106,7 @@ public class SecurityConfig {
             .requestMatchers(new AntPathRequestMatcher("/eureka/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/api/public/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/api/microservices/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/api/swagger-test/**")).permitAll()  // Add this for testing
             .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/login")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/passwords/new")).authenticated()
@@ -99,9 +138,13 @@ public class SecurityConfig {
             .permitAll()
         );
         
-        // Configure custom access denied handler
+        // Configure exception handling with different behavior for API vs Web requests
         http.exceptionHandling(exceptionHandling -> 
-            exceptionHandling.accessDeniedHandler(csrfAccessDeniedHandler));
+            exceptionHandling
+                .defaultAuthenticationEntryPointFor(apiAuthenticationEntryPoint(), isApiRequest())
+                .defaultAccessDeniedHandlerFor(apiAccessDeniedHandler(), isApiRequest())
+                .accessDeniedHandler(csrfAccessDeniedHandler)
+        );
         
         return http.build();
     }
@@ -129,6 +172,7 @@ public class SecurityConfig {
             .requestMatchers(new AntPathRequestMatcher("/eureka/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/api/public/**")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/api/microservices/**")).permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/api/swagger-test/**")).permitAll()  // Add this for testing
             .requestMatchers(new AntPathRequestMatcher("/error")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/login")).permitAll()
             .requestMatchers(new AntPathRequestMatcher("/passwords/new")).authenticated()
@@ -160,9 +204,13 @@ public class SecurityConfig {
             .permitAll()
         );
         
-        // Configure custom access denied handler
+        // Configure exception handling with different behavior for API vs Web requests
         http.exceptionHandling(exceptionHandling -> 
-            exceptionHandling.accessDeniedHandler(csrfAccessDeniedHandler));
+            exceptionHandling
+                .defaultAuthenticationEntryPointFor(apiAuthenticationEntryPoint(), isApiRequest())
+                .defaultAccessDeniedHandlerFor(apiAccessDeniedHandler(), isApiRequest())
+                .accessDeniedHandler(csrfAccessDeniedHandler)
+        );
         
         return http.build();
     }

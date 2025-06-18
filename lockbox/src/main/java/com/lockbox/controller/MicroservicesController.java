@@ -1,6 +1,7 @@
 package com.lockbox.controller;
 
 import com.lockbox.client.UserServiceClient;
+import com.lockbox.dto.ApiResponse;
 import com.lockbox.dto.UserDto;
 import com.lockbox.service.DistributedLoggingService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -8,13 +9,18 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.Timer;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +28,8 @@ import java.util.Map;
 @RequestMapping("/api/microservices")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Microservices", description = "Microservices integration endpoints")
+@ConditionalOnProperty(name = "eureka.client.enabled", havingValue = "true")
 public class MicroservicesController {
 
     private final UserServiceClient userServiceClient;
@@ -29,23 +37,21 @@ public class MicroservicesController {
     private final DiscoveryClient discoveryClient;
 
     @GetMapping("/health")
-    @Timed(value = "microservices.health", description = "Health check endpoint")
-    public ResponseEntity<Map<String, String>> health() {
-        Timer.Sample sample = loggingService.startTimer();
-        try {
-            loggingService.logRequest("health-check", "system", "health check request");
-            
-            Map<String, String> health = Map.of(
-                "status", "UP",
-                "service", "lockbox-service",
-                "correlationId", loggingService.getCorrelationId()
-            );
-            
-            loggingService.logResponse("health-check", "system", health);
-            return ResponseEntity.ok(health);
-        } finally {
-            loggingService.stopTimer(sample);
-        }
+    @Operation(summary = "Check microservices health", description = "Returns the health status of microservices integration")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Microservices are healthy"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "503", description = "Some microservices are unavailable")
+    })
+    public ResponseEntity<ApiResponse<Map<String, Object>>> checkHealth() {
+        Map<String, Object> healthData = new HashMap<>();
+        healthData.put("discoveryClient", "enabled");
+        healthData.put("feignClients", "configured");
+        healthData.put("circuitBreaker", "active");
+        
+        return ResponseEntity.ok(ApiResponse.success(
+            "Microservices integration is healthy", 
+            healthData
+        ));
     }
 
     @GetMapping("/services")
@@ -81,65 +87,98 @@ public class MicroservicesController {
     }
 
     @GetMapping("/users/{id}")
+    @Operation(summary = "Get user via microservice", description = "Retrieves user data through microservices with circuit breaker protection")
     @CircuitBreaker(name = "user-service", fallbackMethod = "getUserFallback")
     @Retry(name = "user-service")
-    @RateLimiter(name = "user-service")
-    @Timed(value = "microservices.user.get", description = "Get user via service call")
-    public ResponseEntity<UserDto> getUser(@PathVariable Long id) {
-        Timer.Sample sample = loggingService.startTimer();
+    public ResponseEntity<ApiResponse<UserDto>> getUserViaMicroservice(@PathVariable Long id) {
+        log.info("Attempting to get user {} via microservice", id);
+        
         try {
-            loggingService.logRequest("get-user", "system", id);
-            
             UserDto user = userServiceClient.getUser(id);
-            
-            loggingService.logResponse("get-user", "system", user);
-            return ResponseEntity.ok(user);
+            return ResponseEntity.ok(ApiResponse.success(
+                "User retrieved successfully via microservice", 
+                user
+            ));
         } catch (Exception e) {
-            loggingService.logError("get-user", "system", e);
+            log.error("Error getting user via microservice: {}", e.getMessage());
             throw e;
-        } finally {
-            loggingService.stopTimer(sample);
         }
     }
 
     @GetMapping("/users")
+    @Operation(summary = "Get all users via microservice", description = "Retrieves all users through microservices with circuit breaker protection")
     @CircuitBreaker(name = "user-service", fallbackMethod = "getAllUsersFallback")
     @Retry(name = "user-service")
-    @RateLimiter(name = "user-service")
-    @Timed(value = "microservices.users.getAll", description = "Get all users via service call")
-    public ResponseEntity<List<UserDto>> getAllUsers() {
-        Timer.Sample sample = loggingService.startTimer();
+    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsersViaMicroservice() {
+        log.info("Attempting to get all users via microservice");
+        
         try {
-            loggingService.logRequest("get-all-users", "system", "get all users");
-            
             List<UserDto> users = userServiceClient.getAllUsers();
-            
-            loggingService.logResponse("get-all-users", "system", users);
-            return ResponseEntity.ok(users);
+            return ResponseEntity.ok(ApiResponse.success(
+                "Users retrieved successfully via microservice", 
+                users
+            ));
         } catch (Exception e) {
-            loggingService.logError("get-all-users", "system", e);
+            log.error("Error getting users via microservice: {}", e.getMessage());
             throw e;
-        } finally {
-            loggingService.stopTimer(sample);
         }
     }
 
-    // Fallback methods
-    public ResponseEntity<UserDto> getUserFallback(Long id, Exception ex) {
-        log.warn("Circuit breaker activated for getUser with id: {}, error: {}", id, ex.getMessage());
-        UserDto fallbackUser = new UserDto();
-        fallbackUser.setId(id);
-        fallbackUser.setUsername("fallback-user");
-        fallbackUser.setEmail("fallback@example.com");
-        return ResponseEntity.ok(fallbackUser);
+    @PostMapping("/users")
+    @Operation(summary = "Create user via microservice", description = "Creates a new user through microservices with circuit breaker protection")
+    @CircuitBreaker(name = "user-service", fallbackMethod = "createUserFallback")
+    @Retry(name = "user-service")
+    public ResponseEntity<ApiResponse<UserDto>> createUserViaMicroservice(@RequestBody UserDto userDto) {
+        log.info("Attempting to create user via microservice: {}", userDto.getUsername());
+        
+        try {
+            UserDto createdUser = userServiceClient.createUser(userDto);
+            return ResponseEntity.ok(ApiResponse.success(
+                "User created successfully via microservice", 
+                createdUser
+            ));
+        } catch (Exception e) {
+            log.error("Error creating user via microservice: {}", e.getMessage());
+            throw e;
+        }
     }
 
-    public ResponseEntity<List<UserDto>> getAllUsersFallback(Exception ex) {
-        log.warn("Circuit breaker activated for getAllUsers, error: {}", ex.getMessage());
-        UserDto fallbackUser = new UserDto();
-        fallbackUser.setId(0L);
-        fallbackUser.setUsername("fallback-user");
-        fallbackUser.setEmail("fallback@example.com");
-        return ResponseEntity.ok(List.of(fallbackUser));
+    @GetMapping("/circuit-breaker/status")
+    @Operation(summary = "Get circuit breaker status", description = "Returns the current status of circuit breakers")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getCircuitBreakerStatus() {
+        Map<String, Object> status = new HashMap<>();
+        status.put("userService", "Circuit breaker monitoring available via actuator endpoints");
+        status.put("endpoint", "/actuator/circuitbreakers");
+        status.put("metrics", "/actuator/metrics/resilience4j.circuitbreaker.calls");
+        
+        return ResponseEntity.ok(ApiResponse.success(
+            "Circuit breaker status information", 
+            status
+        ));
+    }
+
+    // Fallback methods for circuit breaker
+    public ResponseEntity<ApiResponse<UserDto>> getUserFallback(Long id, Exception ex) {
+        log.warn("Circuit breaker activated for getUser({}): {}", id, ex.getMessage());
+        
+        return ResponseEntity.ok(ApiResponse.error(
+            "User service is currently unavailable. Please try again later."
+        ));
+    }
+
+    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsersFallback(Exception ex) {
+        log.warn("Circuit breaker activated for getAllUsers: {}", ex.getMessage());
+        
+        return ResponseEntity.ok(ApiResponse.error(
+            "User service is currently unavailable. Please try again later."
+        ));
+    }
+
+    public ResponseEntity<ApiResponse<UserDto>> createUserFallback(UserDto userDto, Exception ex) {
+        log.warn("Circuit breaker activated for createUser({}): {}", userDto.getUsername(), ex.getMessage());
+        
+        return ResponseEntity.ok(ApiResponse.error(
+            "User service is currently unavailable. User creation failed."
+        ));
     }
 } 

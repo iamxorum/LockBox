@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,7 +74,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGlobalException(
-            Exception ex, WebRequest request) {
+            Exception ex, WebRequest request, HttpServletRequest httpRequest) {
+        
+        // Don't handle exceptions for SpringDoc/Swagger paths
+        String requestPath = httpRequest.getRequestURI();
+        if (requestPath.contains("/v3/api-docs") || 
+            requestPath.contains("/swagger-ui") || 
+            requestPath.contains("/webjars")) {
+            throw new RuntimeException(ex);
+        }
+        
         return new ResponseEntity<>(
                 ApiResponse.error("An unexpected error occurred: " + ex.getMessage()),
                 HttpStatus.INTERNAL_SERVER_ERROR
