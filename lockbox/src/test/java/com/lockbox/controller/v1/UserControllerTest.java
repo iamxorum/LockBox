@@ -264,11 +264,13 @@ class UserControllerTest {
     }
 
     @Test
-    void getUserById_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
+    void getUserById_WithoutAuthentication_ShouldReturnUnauthorized() throws Exception {
         // When & Then
         mockMvc.perform(get("/api/v1/users/1"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("http://localhost/login"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value("Authentication required"));
 
         verifyNoInteractions(userService);
     }

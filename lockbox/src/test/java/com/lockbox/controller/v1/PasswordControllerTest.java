@@ -319,11 +319,13 @@ class PasswordControllerTest {
     }
 
     @Test
-    void getPasswordById_WithoutAuthentication_ShouldRedirectToLogin() throws Exception {
+    void getPasswordById_WithoutAuthentication_ShouldReturnUnauthorized() throws Exception {
         // When & Then
         mockMvc.perform(get("/api/v1/passwords/1"))
-                .andExpect(status().isFound())
-                .andExpect(redirectedUrl("http://localhost/login"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value("Authentication required"));
 
         verifyNoInteractions(passwordService);
     }
