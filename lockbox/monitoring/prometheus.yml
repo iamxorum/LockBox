@@ -2,10 +2,6 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
-rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
-
 scrape_configs:
   # Prometheus itself
   - job_name: 'prometheus'
@@ -24,13 +20,6 @@ scrape_configs:
     static_configs:
       - targets: ['eureka-server:8761']
     scrape_interval: 15s
-
-  # API Gateway (Nginx) - Basic monitoring
-  - job_name: 'api-gateway'
-    static_configs:
-      - targets: ['api-gateway:80']
-    scrape_interval: 15s
-    metrics_path: '/gateway/health'
 
   # PostgreSQL Database Metrics
   - job_name: 'postgres-exporter'
@@ -52,12 +41,6 @@ scrape_configs:
       - targets: ['elasticsearch:9200']
     scrape_interval: 30s
     metrics_path: '/_prometheus/metrics'
-
-  # Zipkin
-  - job_name: 'zipkin'
-    static_configs:
-      - targets: ['zipkin:9411']
-    scrape_interval: 30s
 
   # Service Discovery via Eureka
   - job_name: 'eureka-discovery'

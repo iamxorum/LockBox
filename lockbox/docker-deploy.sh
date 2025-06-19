@@ -33,7 +33,7 @@ fi
 
 # Start the infrastructure services first (databases, message queues)
 echo "🚀 Starting infrastructure services..."
-docker-compose up -d postgres redis rabbitmq elasticsearch
+docker-compose up -d postgres redis rabbitmq elasticsearch --build
 
 # Wait for databases to be ready
 echo "⏳ Waiting for databases to be ready..."
@@ -41,7 +41,7 @@ sleep 15
 
 # Start service discovery
 echo "🔍 Starting service discovery..."
-docker-compose up -d eureka-server
+docker-compose up -d eureka-server --build
 
 # Wait for Eureka to be ready
 echo "⏳ Waiting for Eureka to be ready..."
@@ -49,7 +49,7 @@ sleep 10
 
 # Start monitoring services
 echo "📊 Starting monitoring services..."
-docker-compose up -d prometheus grafana zipkin logstash kibana postgres-exporter
+docker-compose up -d prometheus grafana zipkin kibana postgres-exporter --build
 
 # Wait for monitoring services
 echo "⏳ Waiting for monitoring services..."

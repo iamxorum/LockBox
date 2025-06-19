@@ -7,6 +7,7 @@ import com.lockbox.dto.UserStatsDto;
 import com.lockbox.exception.ResourceNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +43,7 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
+    @Cacheable(value = "users", key = "#id")
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
